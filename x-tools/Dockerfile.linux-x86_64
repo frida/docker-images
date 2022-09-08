@@ -1,0 +1,23 @@
+FROM ubuntu:22.04 AS build
+COPY scripts/build-toolchain.sh configs/x86_64-linux-gnu.config /src/
+RUN /src/build-toolchain.sh
+
+FROM ubuntu:22.04
+COPY --from=build /opt /opt
+ENV XTOOLS_HOST="x86_64-linux-gnu"
+ENV \
+	PATH="/opt/x-tools/${XTOOLS_HOST}/bin:$PATH" \
+	CPP="${XTOOLS_HOST}-cpp" \
+	CC="${XTOOLS_HOST}-gcc" \
+	CXX="${XTOOLS_HOST}-g++" \
+	AS="${XTOOLS_HOST}-as" \
+	LD="${XTOOLS_HOST}-ld" \
+	AR="${XTOOLS_HOST}-ar" \
+	NM="${XTOOLS_HOST}-nm" \
+	RANLIB="${XTOOLS_HOST}-ranlib" \
+	STRIP="${XTOOLS_HOST}-strip" \
+	READELF="${XTOOLS_HOST}-readelf" \
+	OBJCOPY="${XTOOLS_HOST}-objcopy" \
+	OBJDUMP="${XTOOLS_HOST}-objdump"
+COPY scripts/install-packages.sh /tmp
+RUN /tmp/install-packages.sh
