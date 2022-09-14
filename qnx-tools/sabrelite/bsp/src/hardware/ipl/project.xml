@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<module name="ipl">
+  <classification>Driver</classification>
+  <requires>
+    <part build="true" location="hardware/ipl/lib"/>
+    <part build="false" location="hardware/devc"/>
+  </requires>
+</module>

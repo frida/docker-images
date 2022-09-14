@@ -1,0 +1,17 @@
+<!-- Unless otherwise specified, values/attributes are free-form strings -->
+    <!-- type is currently either BSP or SourceOnly -->
+<sourcePackage type="BSP" id="bsp-freescale-mx6q-sabrelite">
+    <title>Freescale i.MX6Q Sabre-Lite Board</title>
+    <release>latest</release>
+    <maturity>Development Build</maturity>
+    <license>QDL and Apache II</license>
+    <startup>startup-imx6x-sabrelite</startup> 
+    <description> This package contains the source and build files for targeting QNX/Neutrino on Freescale i.MX6 Sabre-Lite reference board.</description>
+    <vendor>QNX Software Systems</vendor>
+    <qnxTargetVersion>mainline</qnxTargetVersion>
+   	<qnxTargetCPU variant="armle.v7">ARM</qnxTargetCPU>
+    <!-- type is currently only import, will be extended in the future. -->
+    <bsp type="import">
+    	<import id="bsp-freescale-mx6q-sabrelite">src/hardware/startup/boards/imx6x/sabrelite/build</import>
+    </bsp>
+</sourcePackage>

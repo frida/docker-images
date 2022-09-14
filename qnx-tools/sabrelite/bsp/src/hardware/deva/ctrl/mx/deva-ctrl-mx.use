@@ -1,0 +1,51 @@
+%C - SSI Sound driver for Freescale i.MX SOC family
+
+This is a DLL of the io-audio system.
+
+command:
+
+   io-audio [-d mx-[variant] [driver_options]] [-o opt[, opt[, opt]]] [v[v]...]]
+
+driver_options:
+
+ssibase        = val        SSI controller index or base address
+tevt           = val        SSI TX DMA event number
+tchn           = val        SSI TX DMA channel type 
+revt           = val        SSI RX DMA event number
+rchn           = val        SSI RX DMA channel type
+rate           = min[:max]  SSI audio sample rate
+clk_mode       = arg        SSI clock mode
+                            Args: i2s_master, i2s_slave,
+                                  normal_master, normal_slave
+i2c_bus        = val        I2C device used for codec (0,1,2)
+sys_clk        = val        Audio system clock (sys_clk/mclk)
+protocol       = [i2s|pcm]  Audio Protocol
+                            (i2s: xclk_pol=0, rclk_pol=1, xfsync_pol=0, bit_delay=1)
+                            (pcm: xclk_pol=1, rclk_pol=1, xfsync_pol=1, bit_delay=0)
+xclk_pol       = [0|1]      Tansmit clk polarity 0=falling edge, 1=rising edge
+rclk_pol       = [0|1]      Receive clk polarity 0=falling edge, 1=rising edge
+xfsync_pol     = [0|1]      Frame Sync polarity 0=active low, 1=active high
+bit_delay      = [0|1]      Delay between frame sync edge and fisrt data bit
+tx_voices      = val        Number of playback channels/voices.
+rx_voices      = val        Number of capture channels/voices
+capture_subchn = val        Number of simultaneous capture streams. (default=1)
+xfsync_len     = [bit|word] Size of frame sync pulse (default depends on clk_mode)
+nslots         = val        Number of slots in the frame (default depends on clk_mode)
+
+mixer          = [info:[mixer option1]:[mixer options2][:[other options]]]
+                 mixer=info to display the details of mixer options
+
+Note: When the clock mode is set to normal mode, only mono streams are
+      supported (hardware imposed). Increasing the nslots will lengthen
+      the frame but not effect the number of voices/channels.
+
+example:
+
+   # Start audio driver on SSI 1 port for MX51 PDK board
+   io-audio -d mx-mx51pdk ssibase=0x83FCC000,mixer=i2cdev=1:adr0cs=0:mclk=26000000
+
+   # Start audio driver on SSI 1 port for MX35 PDK board
+   io-audio -d mx-mx35pdk ssibase=0x43fa0000,mixer=i2cdev=0:adr0cs=0:mclk=12288000
+
+   # Start audio driver on SSI 1 port for MX25 3DS board
+   io-audio -d mx-3dsmx25 ssibase=0x50034000,mixer=i2cdev=0:adr0cs=0:mclk=12288000

@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<module name="ipl">
+	<type>Element</type>
+	<classification>Driver</classification>
+
+        <source>
+                <location subdirs="false">.</location>
+                <location subdirs="true">lib</location>
+        </source>
+	<GroupOwner>hw</GroupOwner>
+	<RuntimeComponent>Neutrino RTOS</RuntimeComponent>
+
+
+	<requires>
+		<part build="true" location="hardware/ipl/lib"/>
+		<part build="false" location="hardware/devc"/>
+	</requires>
+
+</module>

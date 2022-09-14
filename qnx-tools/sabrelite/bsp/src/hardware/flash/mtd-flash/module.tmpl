@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<module name="libmtd-flash">
+	<type>Element</type>
+	<classification>SDK</classification>
+
+	<description>
+	        <short>Memory Technology Device: Flash Library</short>
+	        <abstract>
+	                <![CDATA[The mtd-flash library (libmtd-flash.a) contains generic code which is used by all of the various devf-* modules. Low-level routines exist within libmtd-flash.a for identifying, configuring and accessing flash memory, using the various methods defined in each of the major NOR flash manufacturers' specifications.]]>
+	        </abstract>
+	</description>
+
+	<supports>
+		<availability ref="ostargets"/>
+	</supports>
+	
+	<source>
+		<location subdirs="false">.</location>
+	</source>
+	<GroupOwner>hw</GroupOwner>
+	<RuntimeComponent>Neutrino RTOS</RuntimeComponent>
+
+
+	<contents>
+		<component id="mtd-flash" generated="true">
+		<kind type="library"/>
+			<location basedir="{cpu}/a{.:endian}" runtime="false">
+				libmtd-flash.a
+			</location>
+		</component>
+	</contents>
+</module>

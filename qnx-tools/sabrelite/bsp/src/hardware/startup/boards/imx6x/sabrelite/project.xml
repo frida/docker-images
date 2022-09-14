@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<module name="startup-mx6q-sabrelite">
+  <classification>Driver</classification>
+  <description>
+    <short>Startup for Freescale i.MX6Q Sabre-Lite board</short>
+    <abstract><![CDATA[
+	                The startup-mx6q-sabrelite program is responsible for the second stage initialization of the Freescale i.MX6Q Sabre-Lite boards. This stage mainly involves populating the syspage, which is an in-memory data structure that contains information about the system, such as memory size and location, information about the CPU(s), caches, clocks and timers, and interrupt subsystem. At runtime, the information in the syspage is accessed and used by procnto, and by various processes.
+	        ]]></abstract>
+  </description>
+  <supports>
+    <availability>
+      <cpu isa="arm">
+        <byteOrder>le</byteOrder>
+      </cpu>
+    </availability>
+  </supports>
+  <contents>
+    <component id="mx6q" generated="true">
+      <location basedir="arm/le">startup-mx6q-sabrelite</location>
+    </component>
+    <component id="mx6q-build" generated="true">
+      <location basedir=".">build</location>
+    </component>
+  </contents>
+  <requires>
+    <part rootMacro="LIBSTARTUP_ROOT" build="true" location="hardware/startup/lib"/>
+  </requires>
+</module>

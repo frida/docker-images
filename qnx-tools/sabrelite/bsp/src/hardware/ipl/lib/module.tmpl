@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<module name="libipl">
+	<type>Element</type>
+	<classification>SDK</classification>
+
+	<description>
+	        <short>Initial Program Loader Library</short>
+	        <abstract>
+	                <![CDATA[The IPL library (libipl.a) contains generic code which is used by all of the various ipl-* modules. Routines exist within libipl.a for scanning for a QNX IFS image, copying an IFS image from one location to another (e.x. from flash to DRAM), extracting a start address from an IFS image and jumping to that address, serially downloading an IFS image directly to DRAM, and various serial debug functions, such as displaying a character, displaying a string, getting input from a console, etc.]]>
+	        </abstract>
+	</description>
+
+	<supports>
+		<availability ref="ostargets"/>
+	</supports>
+
+	<source available="false">
+		<location type="">.</location>
+	</source>
+	<GroupOwner>hw</GroupOwner>
+	<RuntimeComponent>Neutrino RTOS</RuntimeComponent>
+
+
+	<contents>
+		<component id="Archive" generated="true">
+		<kind type="library"/>
+			<location basedir="{cpu}/a{.:endian}" runtime="false">
+				libipl.a
+			</location>
+		</component>
+	</contents>
+
+	<requires>
+	        <part build="false" location="hardware/ipl"/>
+	        <part build="false" location="hardware/devc"/>
+	</requires>
+
+</module>

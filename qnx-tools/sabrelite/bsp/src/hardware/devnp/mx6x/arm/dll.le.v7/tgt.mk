@@ -1,0 +1,1 @@
+USEFILE=$(PROJECT_ROOT)/$(NAME).use

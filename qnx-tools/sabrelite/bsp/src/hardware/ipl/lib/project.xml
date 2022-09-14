@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<module name="libipl">
+  <classification>SDK</classification>
+  <description>
+    <short>Initial Program Loader Library</short>
+    <abstract><![CDATA[
+	                The IPL library (libipl.a) contains generic code which is used by all of the various ipl-* modules. Routines exist within libipl.a for scanning for a QNX IFS image, copying an IFS image from one location to another (e.x. from flash to DRAM), extracting a start address from an IFS image and jumping to that address, serially downloading an IFS image directly to DRAM, and various serial debug functions, such as displaying a character, displaying a string, getting input from a console, etc.
+	        ]]></abstract>
+  </description>
+  <supports>
+    <availability>
+      <os name="nto">
+        <cpu isa="ppc">
+          <byteOrder>be</byteOrder>
+          <byteOrder>be.spe</byteOrder>
+        </cpu>
+        <cpu isa="sh">
+          <byteOrder>le</byteOrder>
+        </cpu>
+        <cpu isa="arm">
+          <byteOrder>le</byteOrder>
+          <byteOrder>le.v7</byteOrder>
+        </cpu>
+        <cpu isa="x86"/>
+        <cpu isa="mips">
+          <byteOrder>le</byteOrder>
+          <byteOrder>be</byteOrder>
+        </cpu>
+      </os>
+    </availability>
+  </supports>
+  <contents>
+    <component id="Archive" generated="true">
+      <location basedir="ppc/a.be">				libipl.a			</location>
+      <location basedir="ppc/a.be.spe">				libipl.a			</location>
+      <location basedir="sh/a.le">				libipl.a			</location>
+      <location basedir="arm/a.le">				libipl.a			</location>
+      <location basedir="arm/a.le.v7">				libipl.a			</location>
+      <location basedir="x86/a">				libipl.a			</location>
+      <location basedir="mips/a.le">				libipl.a			</location>
+      <location basedir="mips/a.be">				libipl.a			</location>
+    </component>
+  </contents>
+  <requires>
+    <part build="false" location="hardware/ipl"/>
+    <part build="false" location="hardware/devc"/>
+  </requires>
+</module>

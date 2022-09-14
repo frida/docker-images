@@ -1,0 +1,28 @@
+%C Driver for Freescale i.MX6-SoloX ENET
+
+Syntax:
+  io-pkt-vX -d mx6x-slx mac=XXXXXXXXXXXX [option[,option ...]] ... &
+
+Options (to override autodetected defaults):
+  duplex=0|1          Half (0) or full (1) duplex mode.  Default auto-detect.
+                      Also can use ifconfig -m and ifconfig enX media to set.
+  mac=XXXXXXXXXXXX    MAC address of the controller.
+  receive=X           Set number of receive descriptors. Default 1024.
+  speed=10|100        Media data rate.  Default auto-detect.  Also can
+                      use ifconfig -m and ifconfig enX media to set.
+  transmit=X          Set number of transmit descriptors. Default 1024.
+  verbose=X           Bigger X value yields increased diagnostic output.
+  freq=X              Ethernet timestamp clock frequency in MHz. If not
+                      specified attempt to autodetect.
+  bcm89810=0|1        Select master (0) or slave (1) role when using the
+                      BCM89810 phy for board-to-board connection.
+  mii                 Use the MII interface between the MAC and the PHY.
+                      Default is RGMII.
+  rmii                Use the RMII interface between the MAC and the PHY.
+                      Default is RGMII.
+
+Examples:
+  # Start v4 TCP/IP io-pkt using the mx6-slx driver:
+  io-pkt-v4-hc -d mx6x-slx mac=00123456789a
+  ifconfig fec0 192.0.2.1
+

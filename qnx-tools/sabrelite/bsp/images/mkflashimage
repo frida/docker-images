@@ -1,0 +1,14 @@
+#!/bin/sh
+# script to build a binary IPL and boot image for i.MX6 Q Sabre-Lite board. 
+# NOTE the image (ipl-ifs-mx6q-sabrelite.bin) must be built as binary, i.e. [virtual=armle,binary] in the buildfile 
+set -v
+
+#	Convert IPL into BINARY format
+${QNX_HOST}/usr/bin/ntoarmv7-objcopy --input-format=elf32-littlearm --output-format=binary ../install/armle-v7/boot/sys/ipl-mx6q-sabrelite ./tmp-ipl-mx6q-sabrelite.bin
+${QNX_HOST}/usr/bin/ntoarmv7-objcopy --input-format=elf32-littlearm --output-format=binary ../install/armle-v7/boot/sys/ipl-mx6q-sabrelite-enableTZASC ./tmp-ipl-mx6q-sabrelite-enableTZASC.bin
+
+#	Pad BINARY IPL
+mkrec  -ffull -r tmp-ipl-mx6q-sabrelite.bin > ipl-mx6q-sabrelite.bin
+mkrec  -ffull -r tmp-ipl-mx6q-sabrelite-enableTZASC.bin > ipl-mx6q-sabrelite-enableTZASC.bin
+
+rm tmp-ipl-mx6q-sabrelite.bin tmp-ipl-mx6q-sabrelite-enableTZASC.bin

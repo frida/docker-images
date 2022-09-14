@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<module name="dev-can-mx6x">
+  <classification>Driver</classification>
+  <description>
+    <short>i.mx6x FlexCAN Driver</short>
+    <abstract><![CDATA[
+	                FlexCAN support driver for the Freescale i.mx6x 3DS
+	        ]]></abstract>
+  </description>
+  <supports>
+    <availability>
+      <cpu isa="arm">
+        <byteOrder>le</byteOrder>
+      </cpu>
+    </availability>
+  </supports>
+  <contents>
+    <component id="can-mx6x" generated="true">
+      <location basedir="arm/le">dev-can-mx6x</location>
+    </component>
+  </contents>
+  <requires>
+    <part build="false" location="lib/can"/>
+  </requires>
+</module>

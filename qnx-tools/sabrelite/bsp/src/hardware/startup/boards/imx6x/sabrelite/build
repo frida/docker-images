@@ -1,0 +1,124 @@
+[image=0x10800000]
+[virtual=armle-v7,elf] .bootstrap = {
+	startup-imx6x-sabrelite -m
+
+	PATH=/proc/boot procnto-smp
+}
+[+script] .script = {
+    procmgr_symlink ../../proc/boot/libc.so.3 /usr/lib/ldqnx.so.2
+    devc-sermx1 -e -F -S -c80000000 0x021E8000,59
+
+    reopen
+    slogger &
+
+    # Start some common servers
+    pipe &
+    random -p -t &
+
+    #######################################################################
+    ## RTC
+    #######################################################################
+    rtc hw
+
+    #######################################################################
+    ## Networking
+    #######################################################################
+    io-pkt-v4 -dmx6x speed=100,duplex=1
+    waitfor /dev/socket
+    dhcp.client &
+
+    #######################################################################
+    ## REMOTE_DEBUG (gdb or Momentics)
+    ##  - refer to the help documentation for the gdb, qconn and the IDE
+    ##    for more information on remote debugging
+    ##  - the commands shown require that NETWORK is enabled too
+    #######################################################################
+    devc-pty
+    waitfor /dev/ptyp0 4
+    waitfor /dev/socket 4
+    PATH=$PATH:/usr/bin qconn port=8000
+
+    # Start the main shell
+    SYSNAME=nto
+    TERM=qansi
+    HOME=/
+    PATH=:/bin:/usr/bin:/sbin:/usr/sbin:/proc/boot
+    LD_LIBRARY_PATH=:/lib:/usr/lib:/proc/boot
+    [+session] ksh &
+}
+
+# Redirect console messages
+[type=link] /bin/sh=/proc/boot/ksh
+[type=link] /dev/console=/dev/ser1
+[type=link] /tmp=/dev/shmem
+
+# Programs require the runtime linker (ldqnx.so) to be at a fixed location
+
+# Shared libraries
+libc.so
+libm.so.2
+libz.so.2
+libcpp.so.4
+libbacktrace.so.1
+
+###########################################################################
+## uncomment for NETWORK driver
+###########################################################################
+devnp-mx6x.so
+libsocket.so
+devnp-shim.so
+
+# Executables
+[data=c]
+devc-sermx1
+
+###########################################################################
+## uncomment for NETWORK driver
+###########################################################################
+io-pkt-v4
+nicinfo
+ping
+ftp
+ifconfig
+dhcp.client
+if_up
+
+#######################################################################
+## uncomment for RTC utility
+#######################################################################
+rtc
+
+###########################################################################
+## uncomment for REMOTE_DEBUG
+###########################################################################
+devc-pty
+qconn
+/usr/bin/pdebug=pdebug
+
+###########################################################################
+## general commands
+###########################################################################
+cp
+ls
+cat
+ksh
+pipe
+pidin
+uname
+slogger
+sloginfo
+slay
+mount
+umount
+use
+date
+shutdown
+devb-umass
+chmod
+ln
+rm
+mv
+sleep
+random
+dd
+top

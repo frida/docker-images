@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<module name="flash">
+	<type>Element</type>
+	<classification>SDK</classification>
+
+	<supports>
+		<availability ref="ostargets"/>
+	</supports>
+	
+	<source>
+		<location subdirs="false">.</location>
+		<location subdirs="true">mtd-flash</location>
+	</source>
+	<GroupOwner>hw</GroupOwner>
+	<RuntimeComponent>Neutrino RTOS</RuntimeComponent>
+
+
+	<contents>
+		<component id="mtd-flash-public">
+			<kind type="header"/>
+			<source>
+				<location basedir="mtd-flash/public" subdirs="true" runtime="false">.</location>
+			</source>
+		</component>
+	</contents>
+
+	<requires>
+       	 <part build="true" location="hardware/flash/mtd-flash"/>
+	</requires>
+</module>

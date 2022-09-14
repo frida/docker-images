@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<module name="i2c-mx35">
+  <classification>Driver</classification>
+  <description>
+    <short>i.MX35 I2C Driver</short>
+    <abstract><![CDATA[
+	                This Multi-master fast mode capable interface is supported in the Freescale i.MX35 BSP.
+	        ]]></abstract>
+  </description>
+  <supports>
+    <availability>
+      <cpu isa="arm">
+        <byteOrder>le</byteOrder>
+      </cpu>
+    </availability>
+  </supports>
+  <contents>
+    <component id="mx35" generated="true">
+      <location basedir="arm/le">i2c-mx35</location>
+    </component>
+  </contents>
+  <requires>
+    <part build="false" location="lib/i2c"/>
+  </requires>
+</module>

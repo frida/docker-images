@@ -1,0 +1,31 @@
+%C Driver for mx51 ECSPI
+
+Syntax:
+  spi-master -d mx51ecspi [option[,option ...]] ... &
+
+Options (to override autodetected defaults):
+
+  base=address        Base address of ECSPI controller, default 0x70010000
+  irq=num             IRQ of the interface, default 14
+  clock=num           ECSPI clock, default 66500000 Hz
+  loopback=num        Set internal loopback for test, default=0 (loopback disabled)
+  waitstate=num       Set number of waitstates between xfers, default=0
+  csdelay=num         Set number of SPI clocks between chip select active edge and first SPI clock edge, default=0
+  waitstate=num       Set number of waitstates between xfers, default=0
+  burst=num           Indicate which mode used for SPI transfer,
+                      if burst=1 (default value), it work in burst mode that support 8, 16 and 32bits word;
+                      if burst=0, it work in word mode and support any word length (from 1 to 32 bits)
+  gpiocsbase=address  GPIO Base address for GPIO Slave Select pin
+  gpiocs0=num         GPIO pin number for SS0 pin
+  gpiocs1=num         GPIO pin number for SS1 pin
+  gpiocs2=num         GPIO pin number for SS2 pin
+  gpiocs3=num         GPIO pin number for SS3 pin
+  errata=num          Support ERRATA ENGcm09397, default=1 (enable errata). if errata=0, disable errata support.
+
+Examples:
+  # Start SPI driver with base address, IRQ and waitstates
+  spi-master -d mx51ecspi base=0x70010000,irq=36,waitstate=2
+
+  spi-master -u1 -d mx51ecspi base=0x83FAC000,irq=37,waitstate=2
+
+  spi-master -d mx51ecspi base=0x70010000,irq=36,waitstate=2,loopback=1

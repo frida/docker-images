@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<module name="flash">
+  <classification>SDK</classification>
+  <supports>
+    <availability>
+      <os name="nto">
+        <cpu isa="ppc">
+          <byteOrder>be</byteOrder>
+          <byteOrder>be.spe</byteOrder>
+        </cpu>
+        <cpu isa="sh">
+          <byteOrder>le</byteOrder>
+        </cpu>
+        <cpu isa="arm">
+          <byteOrder>le</byteOrder>
+          <byteOrder>le.v7</byteOrder>
+        </cpu>
+        <cpu isa="x86"/>
+        <cpu isa="mips">
+          <byteOrder>le</byteOrder>
+          <byteOrder>be</byteOrder>
+        </cpu>
+      </os>
+    </availability>
+  </supports>
+  <contents>
+    <component id="mtd-flash-public" generated=""/>
+  </contents>
+  <requires>
+    <part build="true" location="hardware/flash/mtd-flash"/>
+  </requires>
+</module>

@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<module name="devnp-mx51">
+  <classification>Driver</classification>
+  <description>
+    <short>Driver for Freescale i.mx51 (FEC) Ethernet controllers</short>
+    <abstract><![CDATA[
+                        The devnp-mx51.so driver controls i.mx 51 FEC Ethernet adapters.
+                ]]></abstract>
+  </description>
+  <supports>
+    <availability>
+      <cpu isa="arm">
+        <byteOrder>le</byteOrder>
+      </cpu>
+    </availability>
+  </supports>
+  <contents>
+    <component id="mx51" generated="true">
+      <location basedir="arm/dll.le">devnp-mx51.so</location>
+    </component>
+  </contents>
+  <requires>
+    <part build="true" location="lib/drvr"/>
+  </requires>
+</module>

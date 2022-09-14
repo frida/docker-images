@@ -1,0 +1,3 @@
+SDMA - DMA Controller driver for the imx platform
+
+Loaded and utilised by various drivers.

@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<module name="libmtd-flash">
+  <classification>SDK</classification>
+  <description>
+    <short>Memory Technology Device: Flash Library</short>
+    <abstract><![CDATA[
+	                The mtd-flash library (libmtd-flash.a) contains generic code which is used by all of the various devf-* modules. Low-level routines exist within libmtd-flash.a for identifying, configuring and accessing flash memory, using the various methods defined in each of the major NOR flash manufacturers' specifications.
+	        ]]></abstract>
+  </description>
+  <supports>
+    <availability>
+      <os name="nto">
+        <cpu isa="ppc">
+          <byteOrder>be</byteOrder>
+          <byteOrder>be.spe</byteOrder>
+        </cpu>
+        <cpu isa="sh">
+          <byteOrder>le</byteOrder>
+        </cpu>
+        <cpu isa="arm">
+          <byteOrder>le</byteOrder>
+          <byteOrder>le.v7</byteOrder>
+        </cpu>
+        <cpu isa="x86"/>
+        <cpu isa="mips">
+          <byteOrder>le</byteOrder>
+          <byteOrder>be</byteOrder>
+        </cpu>
+      </os>
+    </availability>
+  </supports>
+  <contents>
+    <component id="mtd-flash" generated="true">
+      <location basedir="ppc/a.be">				libmtd-flash.a			</location>
+      <location basedir="ppc/a.be.spe">				libmtd-flash.a			</location>
+      <location basedir="sh/a.le">				libmtd-flash.a			</location>
+      <location basedir="arm/a.le">				libmtd-flash.a			</location>
+      <location basedir="arm/a.le.v7">				libmtd-flash.a			</location>
+      <location basedir="x86/a">				libmtd-flash.a			</location>
+      <location basedir="mips/a.le">				libmtd-flash.a			</location>
+      <location basedir="mips/a.be">				libmtd-flash.a			</location>
+    </component>
+  </contents>
+</module>

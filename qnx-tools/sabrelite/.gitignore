@@ -1,0 +1,5 @@
+*le.v7*
+bsp/images/ifs-mx6q-sabrelite.elf
+bsp/images/sabrelite.build
+bsp/install/*
+bsp/src/hardware/startup/boards/imx6x/sabrelite/build.pinfo

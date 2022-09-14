@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<module name="deva-ctrl-mx">
+	<type>Element</type>
+	<classification>Driver</classification>
+
+	<description>
+	        <short>I2S Audio Driver for the Freescale i.MX SoC family</short>
+	        <abstract>
+			<![CDATA[The deva-ctrl-mx.so shared object is responsible for configuring and operating the Freescale i.MX audio devices under the direct control of the QNX Sound Architecture (io-audio).]]>
+	        </abstract>
+	</description>
+
+	<supports>
+	        <availability>
+		<cpu isa="arm">
+			<byteOrder>le</byteOrder>
+		</cpu>
+	    </availability>
+	</supports>
+
+	<source available="false">
+		<location type="">.</location>
+	</source>
+	<GroupOwner>hw</GroupOwner>
+
+	<contents>
+		<component id="mx" generated="true">
+			<location basedir="{os}/{cpu}/dll{.:endian}"
+				 runtime="true">deva-ctrl-mx.so</location>
+		</component>
+	</contents>
+	<requires>
+		<part build="false" location="lib/asound"/>
+		<part build="true" location="lib/dma/sdma/imx25"/>
+		<part build="true" location="lib/dma/sdma/imx35"/>
+		<part rootMacro="AUDIO_ROOT" build="true" location="services/audio"/>
+	</requires>
+
+</module>

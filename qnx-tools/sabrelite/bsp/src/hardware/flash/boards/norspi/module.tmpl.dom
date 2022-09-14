@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<module name="devf-norspi">
+	<type>Element</type>
+	<classification>Driver</classification>
+
+	<description>
+		<short> Flash filesystem support for SPI-based NOR chips</short>
+		<abstract>
+			<![CDATA[The devf-norspi manager provides flash filesystem support for the SPI-based NOR flash.]]>
+		</abstract>
+	</description>
+
+	<supports>
+		<availability ref="ostargets"/>
+<availability supported="false">
+ <cpu isa="arm"><byteOrder>le</byteOrder></cpu>
+</availability>
+	</supports>
+
+	<source available="false">
+		<location type="">.</location>
+	</source>
+	<GroupOwner>hw</GroupOwner>
+
+	<contents>
+		<component id="norspi" generated="true">
+			<location basedir="{cpu}/{o|endian}"
+				 runtime="true">devf-norspi</location>
+		</component>
+	</contents>
+
+	<requires>
+		<part build="true" location="lib/drvr"/>
+		<part rootMacro="MTDFLASH_ROOT" build="true" location="hardware/flash/mtd-flash"/>
+	</requires>
+
+</module>

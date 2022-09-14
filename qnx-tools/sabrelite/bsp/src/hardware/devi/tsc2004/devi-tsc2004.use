@@ -1,0 +1,53 @@
+%C [general_opts] protocol* [protocol_opts]* device* [device_opts]*
+
+Input Manager for TSC2004 Touchscreen Controller
+
+General opts:
+ -P disable photon interface (default start Photon interface)
+ -r start resource manager interface (only use if not using Photon)
+ -b prevent CASB exit    (default allow CASB)
+ -d device               (default /dev/photon | PHOTON env var)
+ -G						 Presence of graphics driver is not required when
+						 starting up a touchscreen driver; useful in debug mode
+ -g input group          (default 1)
+ -v increment verbosity  (default 0)
+ -l list                 List the internal modules.  Modules are listed in
+                         the following format:
+
+                           module name | date last compiled | revision | class
+                           where: class is comprised of (D)evice and/or
+                                  (P)rotocol and/or (F)ilter
+
+Device/protocol modules and the options:
+
+tsc2004			Touchscreen device/protocol module for TSC2004 controller
+  -v            Increase the verbosity of this driver
+  -i irq        Touchscreen IRQ (default 276)
+  -c pathname	Pathname of I2C device (default /dev/i2c3)
+  -s speed		I2C speed (default 400K)
+  -a addr		TSC2004 slave address (default 0x48)
+  -d delay      Release event delay (in the unit of microseond, default 100)
+  -D delay      Number of millisecond of the delay between interrupts (default 100)
+  -j jitter_delta  Offset to previous position less will be considered as jitter (default 60)
+
+Filter modules and their options:
+
+ abs               Transform and compresses absolute coordinate "touch" events
+  -b               Touching the screen is a right mouse button (default left)
+  -c               Calibrate mode - don't transform coordinates
+  -f filename      Calibration file name
+  -o x,y           Origin of display region (default, origin of graphics region)
+  -s x,y           Coordinates of lower right corner of display region
+                   (default, width and height of graphics region)
+  -x               Reverse X
+  -y               Reverse Y
+
+Example
+--------
+Invoke the Touchscreen driver for TSC2004 as follows:
+
+devi-tsc2004 -r -P tsc2004
+
+Starts the Touchscreen driver with Resource Manager interface
+by disabling the Photon interface.
+

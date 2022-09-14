@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<module name="spi-mx51ecspi">
+  <classification>Driver</classification>
+  <description>
+    <short>mx51 SPI Driver</short>
+    <abstract><![CDATA[
+		The Serial Protocol Interface on the mx51 is protocol compatible 
+with the standard Enhanced Configurable Serial Protocol Interface (ECSPI)
+support for the ECSPI (spi-mx51ecspi) supports Full Duplex communication in 
+Master mode. The ECSPI provides serial communications between the i.MX51
+CPU core and peripheral devices.
+	        ]]></abstract>
+  </description>
+  <supports>
+    <availability>
+      <cpu isa="arm">
+        <byteOrder>le</byteOrder>
+      </cpu>
+    </availability>
+  </supports>
+  <contents>
+    <component id="spi-mx51ecspi" generated="true">
+      <location basedir="arm/dll.le">spi-mx51ecspi.so</location>
+    </component>
+  </contents>
+  <requires>
+    <part build="false" location="lib/spi-master"/>
+    <part build="false" location="hardware/spi-master"/>
+  </requires>
+</module>

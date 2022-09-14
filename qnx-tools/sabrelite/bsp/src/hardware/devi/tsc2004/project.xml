@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<module name="devi-tsc2004">
+  <classification>Driver</classification>
+  <description>
+    <short>Photon Input Manager for TSC2004 Touchscreen controller</short>
+    <abstract><![CDATA[
+      
+        The devi-tsc2004 is a Photon input manager for the TI TSC2004 Touchscreen controllers.
+      
+    ]]></abstract>
+  </description>
+  <supports>
+    <availability>
+      <cpu isa="arm">
+        <byteOrder>le</byteOrder>
+      </cpu>
+    </availability>
+  </supports>
+  <contents>
+    <component id="tsc2004" generated="true">
+      <location basedir="nto/arm/le">devi-tsc2004</location>
+    </component>
+  </contents>
+  <requires>
+    <part build="false" location="hardware/devi"/>
+    <part build="true" rootMacro="DEVILIB_ROOT" location="hardware/devi/lib"/>
+    <part build="true" rootMacro="KEYMAP_ROOT" location="hardware/devi/keymap"/>
+  </requires>
+</module>

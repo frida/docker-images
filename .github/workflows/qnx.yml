@@ -1,0 +1,56 @@
+name: QNX
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - qnx-tools/**
+  pull_request:
+    branches:
+      - main
+    paths:
+      - qnx-tools/**
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  qnx-tools:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v3
+      - name: Build
+        run: |
+          docker pull navsyslab/qnx:v1.1
+          container_id=$(docker create navsyslab/qnx:v1.1)
+          sudo docker cp $container_id:/opt/qnx650 /opt/qnx650
+          sudo docker cp $container_id:/etc/qnx /etc/qnx
+          sudo chown -R $USER:$USER /etc/qnx
+          export \
+              QNX_HOST=/opt/qnx650/host/linux/x86 \
+              QNX_TARGET=/opt/qnx650/target/qnx6
+          export \
+              MAKEFLAGS=-I$QNX_TARGET/usr/include \
+              PATH=$PATH:$QNX_HOST/usr/bin:/etc/qnx/bin
+          make -C qnx-tools
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/frida/qnx-tools
+          tags: type=raw,value=latest,enable={{ is_default_branch }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: qnx-tools
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

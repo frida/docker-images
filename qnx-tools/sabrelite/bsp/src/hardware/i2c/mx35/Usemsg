@@ -1,0 +1,19 @@
+IMX35 I2C manager
+
+%C [options]
+
+Options:
+-I interface (1 | 2 | 3 Default: 1)
+-a addr     Own address (default: 1)
+-s slave    Slave address (default: 0x38)
+-c clock    Input clock (default: 66500000)
+-v          verbose
+
+Generic options:
+--b bus_speed       Default bus speed. (Default: 100000)
+--m max_msg_len     Minimum length of resmgr receive buffer.
+                    (Default: 128 bytes)
+--n nparts          Minimum number of iov_t's in resmgr context.
+                    (Default: 2)
+--u unit            Unit number. Number to append to device name
+                    prefix (/dev/i2c). (Default: 0)

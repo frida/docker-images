@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<module name="wdtkick">
+  <classification>Driver</classification>
+  <description>
+    <short> Watchdog Timer Module</short>
+    <abstract><![CDATA[
+		The wdtkick is the Watchdog Timer Module for  i.mx25, i.mx35 and i.mx51
+	        ]]></abstract>
+  </description>
+  <supports>
+    <availability>
+      <cpu isa="arm">
+        <byteOrder>le</byteOrder>
+      </cpu>
+    </availability>
+  </supports>
+  <contents>
+    <component id="wdtkick" generated="true">
+      <location basedir="arm/le">wdtkick</location>
+    </component>
+  </contents>
+</module>
