@@ -51,7 +51,7 @@ git clone https://github.com/frida/crosstool-ng.git /src/crosstool-ng
   cd Python-${python_version}
   sed -i -e "s,if not find_executable('dpkg-architecture'):,if True:," setup.py
   export \
-      CFLAGS="$CFLAGS -Oz -w" \
+      CFLAGS="$CFLAGS -Os -w" \
       CPPFLAGS="--sysroot=${xtools_sysroot}"
   ./configure \
       --build=x86_64-linux-gnu \
