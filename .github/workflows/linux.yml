@@ -1,16 +1,11 @@
 name: Linux
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - x-tools/**
-  pull_request:
-    branches:
-      - main
-    paths:
-      - x-tools/**
+  workflow_dispatch:
+    inputs:
+      flavors:
+        description: "List of flavors to build"
+        default: '["x86", "x86_64", "x86_64-musl", "armhf", "arm64", "arm64-musl", "mips", "mipsel", "mips64", "mips64el"]'
 
 env:
   REGISTRY: ghcr.io
@@ -20,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: [x86, x86_64, armhf, arm64, mips, mipsel, mips64, mips64el]
+        flavor: ${{ fromJSON(github.event.inputs.flavors) }}
       fail-fast: false
     steps:
       - name: Check out repo
@@ -35,13 +30,13 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.REGISTRY }}/frida/x-tools-linux-${{ matrix.arch }}
+          images: ${{ env.REGISTRY }}/frida/x-tools-linux-${{ matrix.flavor }}
           tags: type=raw,value=latest,enable={{ is_default_branch }}
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
           context: x-tools
-          file: x-tools/Dockerfile.linux-${{ matrix.arch }}
+          file: x-tools/Dockerfile.linux-${{ matrix.flavor }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
