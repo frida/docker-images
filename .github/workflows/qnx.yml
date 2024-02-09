@@ -1,16 +1,7 @@
 name: QNX
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - qnx-tools/**
-  pull_request:
-    branches:
-      - main
-    paths:
-      - qnx-tools/**
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
