@@ -13,7 +13,7 @@ RUN apt-get update \
 		python-is-python3 \
 		python3-setuptools \
 		qemu-system-arm \
-	&& curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+	&& curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 	&& apt-get install -y nodejs \
 	&& npm install -g cloudflare-cli \
 	&& rm -rf \
