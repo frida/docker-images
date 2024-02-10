@@ -25,7 +25,7 @@ apt-get install -y \
     valac \
     $extra_packages
 
-curl -sL https://deb.nodesource.com/setup_18.x | bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
 apt-get install -y nodejs
 
 npm install -g cloudflare-cli
