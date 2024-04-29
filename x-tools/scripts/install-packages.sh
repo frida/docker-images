@@ -16,7 +16,6 @@ apt-get install -y \
     git \
     gperf \
     make \
-    meson \
     ninja-build \
     pip \
     pkg-config \
