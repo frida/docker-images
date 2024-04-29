@@ -27,19 +27,19 @@ jobs:
               PATH=$PATH:$QNX_HOST/usr/bin:/etc/qnx/bin
           make -C qnx-tools
       - name: Log in to the Container registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/frida/qnx-tools
           tags: type=raw,value=latest,enable={{ is_default_branch }}
       - name: Build and push Docker image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
           context: qnx-tools
           push: true
