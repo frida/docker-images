@@ -1,12 +1,17 @@
-FROM ubuntu:22.04 AS build
+FROM ubuntu:22.04 AS build64
 COPY scripts/build-toolchain.sh configs/x86_64-linux-gnu.config /src/
 RUN /src/build-toolchain.sh
 
+FROM ubuntu:22.04 AS build32
+COPY scripts/build-toolchain.sh configs/i686-linux-gnu.config /src/
+RUN /src/build-toolchain.sh
+
 FROM ubuntu:22.04
-COPY --from=build /opt /opt
+COPY --from=build64 /opt/x-tools/x86_64-linux-gnu /opt/x-tools/x86_64-linux-gnu
+COPY --from=build32 /opt/x-tools/i686-linux-gnu /opt/x-tools/i686-linux-gnu
 ENV XTOOLS_HOST="x86_64-linux-gnu"
 ENV \
-	PATH="/opt/x-tools/$XTOOLS_HOST/bin:$PATH" \
+	PATH="/opt/x-tools/$XTOOLS_HOST/bin:/opt/x-tools/i686-linux-gnu/bin:$PATH" \
 	PKG_CONFIG_PATH="/opt/x-tools/$XTOOLS_HOST/$XTOOLS_HOST/sysroot/usr/lib/pkgconfig"
 COPY scripts/install-packages.sh /tmp
 RUN /tmp/install-packages.sh
