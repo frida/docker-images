@@ -14,4 +14,4 @@ ENV \
 	PATH="/opt/x-tools/$XTOOLS_HOST/bin:/opt/x-tools/i686-linux-gnu/bin:$PATH" \
 	PKG_CONFIG_PATH="/opt/x-tools/$XTOOLS_HOST/$XTOOLS_HOST/sysroot/usr/lib/pkgconfig"
 COPY scripts/install-packages.sh /tmp
-RUN /tmp/install-packages.sh
+RUN /tmp/install-packages.sh libc6-i386
