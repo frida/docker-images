@@ -1,0 +1,314 @@
+################################################################################
+# BASE                                                                         #
+################################################################################
+FROM ubuntu:24.04 AS base
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+    apt-get install -y \
+    wget \
+    xz-utils \
+    unzip \
+    bzip2
+
+################################################################################
+# PLATFORM                                                                     #
+################################################################################
+FROM base AS platform
+RUN apt-get update && \
+    apt-get install -y \
+    gcc \
+    g++ \
+    make \
+    m4 \
+    patch \
+    gawk \
+    perl \
+    texinfo \
+    git \
+    vim \
+    less
+
+RUN mkdir /opt/x-tools/
+ENV PATH=/opt/x-tools/aarch64_be_ilp32-linux-gnu/bin:$PATH
+
+################################################################################
+# GMP                                                                          #
+################################################################################
+FROM base AS gmp
+WORKDIR /root/
+RUN wget http://ftpmirror.gnu.org/gmp/gmp-6.2.0.tar.bz2
+RUN tar xf gmp-6.2.0.tar.bz2
+
+################################################################################
+# MPFR                                                                         #
+################################################################################
+FROM base AS mpfr
+WORKDIR /root/
+RUN wget http://ftpmirror.gnu.org/mpfr/mpfr-4.0.2.tar.bz2
+RUN tar xf mpfr-4.0.2.tar.bz2
+
+################################################################################
+# MPC                                                                          #
+################################################################################
+FROM base AS mpc
+WORKDIR /root/
+RUN wget http://ftpmirror.gnu.org/mpc/mpc-1.1.0.tar.gz
+RUN tar xf mpc-1.1.0.tar.gz
+
+################################################################################
+# BINUTILS                                                                     #
+################################################################################
+FROM base AS binutils
+WORKDIR /root/
+RUN wget http://ftpmirror.gnu.org/binutils/binutils-2.34.tar.bz2
+RUN tar xf binutils-2.34.tar.bz2
+
+################################################################################
+# BINUTILS-ILP32                                                               #
+################################################################################
+FROM platform AS binutils-ilp32
+COPY --from=gmp /root/gmp-6.2.0 /root/gmp-6.2.0
+COPY --from=mpfr /root/mpfr-4.0.2 /root/mpfr-4.0.2
+COPY --from=mpc /root/mpc-1.1.0 /root/mpc-1.1.0
+COPY --from=binutils /root/binutils-2.34 /root/binutils-2.34
+WORKDIR /root/binutils-2.34
+RUN cat <<EOF > /root/binutils-2.34-sysroot.patch
+Signed-off-by: Sven Rebhan <odinshorse@googlemail.com>
+
+Always try to prepend the sysroot prefix to absolute filenames first.
+
+http://bugs.gentoo.org/275666
+http://sourceware.org/bugzilla/show_bug.cgi?id=10340
+
+---
+ ld/ldfile.c |   11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+--- a/ld/ldfile.c
++++ b/ld/ldfile.c
+@@ -339,18 +339,25 @@
+      directory first.  */
+   if (!entry->flags.maybe_archive)
+     {
+-      if (entry->flags.sysrooted && IS_ABSOLUTE_PATH (entry->filename))
++      /* For absolute pathnames, try to always open the file in the
++	 sysroot first. If this fails, try to open the file at the
++	 given location.  */
++      entry->flags.sysrooted = is_sysrooted_pathname (entry->filename);
++      if (!entry->flags.sysrooted && IS_ABSOLUTE_PATH (entry->filename)
++	  && ld_sysroot)
+ 	{
+ 	  char *name = concat (ld_sysroot, entry->filename,
+ 			       (const char *) NULL);
+ 	  if (ldfile_try_open_bfd (name, entry))
+ 	    {
+ 	      entry->filename = name;
++	      entry->flags.sysrooted = TRUE;
+ 	      return TRUE;
+ 	    }
+ 	  free (name);
+ 	}
+-      else if (ldfile_try_open_bfd (entry->filename, entry))
++
++      if (ldfile_try_open_bfd (entry->filename, entry))
+ 	return TRUE;
+
+       if (IS_ABSOLUTE_PATH (entry->filename))
+EOF
+RUN patch -p1 < /root/binutils-2.34-sysroot.patch
+RUN mkdir build-binutils
+WORKDIR /root/build-binutils
+RUN /root/binutils-2.34/configure \
+    --prefix=/opt/x-tools/aarch64_be_ilp32-linux-gnu \
+    --target=aarch64_be-linux-gnu \
+    --disable-multilib \
+    --with-sysroot=/opt/x-tools/aarch64_be_ilp32-linux-gnu/aarch64_be-linux-gnu/sysroot \
+    CFLAGS="-Wno-error"
+RUN make
+RUN make install
+
+################################################################################
+# LINUX                                                                        #
+################################################################################
+FROM base AS linux
+WORKDIR /root/
+RUN wget https://www.kernel.org/pub/linux/kernel/v4.x/linux-4.4.240.tar.xz
+RUN tar xf linux-4.4.240.tar.xz
+
+################################################################################
+# HEADERS-ILP32                                                                #
+################################################################################
+FROM binutils-ilp32 AS headers-ilp32
+COPY --from=linux /root/linux-4.4.240 /root/linux-4.4.240
+WORKDIR /root/linux-4.4.240
+RUN make \
+    CFLAGS="-march=armv8-a -mbig-endian -mabi=ilp32" \
+    LDFLAGS="-EB -mabi=ilp32"\
+    ARCH=arm64 \
+    INSTALL_HDR_PATH=/opt/x-tools/aarch64_be_ilp32-linux-gnu/aarch64_be-linux-gnu/sysroot/usr headers_install
+
+################################################################################
+# GCC                                                                          #
+################################################################################
+FROM base AS gcc
+WORKDIR /root/
+RUN wget http://ftpmirror.gnu.org/gnu/gcc/gcc-9.2.0/gcc-9.2.0.tar.xz
+RUN tar xf gcc-9.2.0.tar.xz
+
+################################################################################
+# GCC-ILP32                                                                    #
+################################################################################
+FROM headers-ilp32 AS gcc-ilp32
+COPY --from=gcc /root/gcc-9.2.0 /root/gcc-9.2.0
+WORKDIR /root/gcc-9.2.0/
+RUN cat <<EOF > /root/gcc.patch
+--- libsanitizer/sanitizer_common/sanitizer_platform_limits_posix.cc    2023-07-26 12:51:49.904605157 +0000
++++ libsanitizer/sanitizer_common/sanitizer_platform_limits_posix.cc    2023-07-26 12:51:54.012605215 +0000
+@@ -1158,7 +1158,7 @@
+ CHECK_SIZE_AND_OFFSET(ipc_perm, cgid);
+ #if !defined(__aarch64__) || !SANITIZER_LINUX || __GLIBC_PREREQ (2, 21)
+ /* On aarch64 glibc 2.20 and earlier provided incorrect mode field.  */
+-CHECK_SIZE_AND_OFFSET(ipc_perm, mode);
++//CHECK_SIZE_AND_OFFSET(ipc_perm, mode);
+ #endif
+
+ CHECK_TYPE_SIZE(shmid_ds);
+EOF
+RUN patch -p0 < /root/gcc.patch
+RUN ln -s /root/gmp-6.2.0/ gmp
+RUN ln -s /root/mpfr-4.0.2/ mpfr
+RUN ln -s /root/mpc-1.1.0/ mpc
+RUN mkdir /root/build-gcc
+WORKDIR /root/build-gcc
+RUN /root/gcc-9.2.0/configure \
+    --prefix=/opt/x-tools/aarch64_be_ilp32-linux-gnu \
+    --target=aarch64_be-linux-gnu \
+    --enable-languages=c,c++ \
+    --disable-multilib \
+    --disable-libsanitizer \
+    --with-sysroot=/opt/x-tools/aarch64_be_ilp32-linux-gnu/aarch64_be-linux-gnu/sysroot \
+    LDFLAGS_FOR_TARGET="-mabi=ilp32" \
+    ASFLAGS_FOR_TARGET="-mabi=ilp32" \
+    CFLAGS_FOR_TARGET="-mabi=ilp32" \
+    CXXFLAGS_FOR_TARGET="-mabi=ilp32"
+RUN make all-gcc
+RUN make install-gcc
+
+################################################################################
+# GLIBC                                                                        #
+################################################################################
+FROM base AS glibc
+WORKDIR /root/
+RUN wget http://ftpmirror.gnu.org/glibc/glibc-2.31.tar.xz
+RUN tar xf glibc-2.31.tar.xz
+
+################################################################################
+# GLIBC-ILP32                                                                  #
+################################################################################
+FROM gcc-ilp32 AS glibc-ilp32
+COPY --from=glibc /root/glibc-2.31 /root/glibc-2.31
+WORKDIR /root/glibc-2.31/
+COPY scripts/arm64beilp32-glibc.patch /root/glibc.patch
+RUN patch -p1 < /root/glibc.patch
+RUN apt-get update && \
+    apt-get install -y \
+    gettext \
+    autoconf \
+    bison \
+    python3
+RUN mkdir /root/build-glibc
+WORKDIR /root/build-glibc
+RUN /root/glibc-2.31/configure \
+    --prefix=/opt/x-tools/aarch64_be_ilp32-linux-gnu/aarch64_be-linux-gnu/sysroot/usr \
+    --build=$MACHTYPE \
+    --host=aarch64_be-linux-gnu \
+    --target=aarch64_be-linux-gnu \
+    --with-headers=/opt/x-tools/aarch64_be_ilp32-linux-gnu/aarch64_be-linux-gnu/sysroot/usr/include \
+    --with-sysroot=/opt/x-tools/aarch64_be_ilp32-linux-gnu/aarch64_be-linux-gnu/sysroot \
+    --disable-multilib \
+    libc_cv_forced_unwind=yes \
+    CFLAGS="\
+    -mabi=ilp32 \
+    -g \
+    -Os \
+    "\
+    LDFLAGS="-mabi=ilp32"
+RUN make install-bootstrap-headers=yes install-headers
+RUN make csu/subdir_lib asm-CPPFLAGS="-mabi=ilp32" LDFLAGS="-mabi=ilp32"
+RUN mkdir /opt/x-tools/aarch64_be_ilp32-linux-gnu/aarch64_be-linux-gnu/sysroot/usr/lib/
+RUN install csu/crt1.o csu/crti.o csu/crtn.o /opt/x-tools/aarch64_be_ilp32-linux-gnu/aarch64_be-linux-gnu/sysroot/usr/lib/
+RUN aarch64_be-linux-gnu-gcc \
+    -mabi=ilp32 \
+    -nostdlib \
+    -nostartfiles \
+    -shared \
+    -x c \
+    /dev/null \
+    -o /opt/x-tools/aarch64_be_ilp32-linux-gnu/aarch64_be-linux-gnu/sysroot/usr/lib/libc.so
+RUN touch /opt/x-tools/aarch64_be_ilp32-linux-gnu/aarch64_be-linux-gnu/sysroot/usr/include/gnu/stubs.h
+
+################################################################################
+# CSL-ILP32                                                                    #
+################################################################################
+FROM glibc-ilp32 AS csl-ilp32
+WORKDIR /root/build-gcc
+RUN make all-target-libgcc
+RUN make install-target-libgcc
+
+################################################################################
+# GLIBC-ILP32                                                                  #
+################################################################################
+FROM csl-ilp32 AS glibc-ilp32-2
+WORKDIR /root/glibc-2.31/
+WORKDIR /root/build-glibc
+RUN make asm-CPPFLAGS=-mabi=ilp32 LDFLAGS=-mabi=ilp32
+RUN make install
+
+################################################################################
+# CPP-ILP32                                                                       #
+################################################################################
+FROM glibc-ilp32-2 AS cpp-ilp32
+WORKDIR /root/build-gcc
+RUN cat <<EOF > /root/cpp.patch
+--- gcc/include-fixed/limits.h  2023-07-26 13:52:38.544657025 +0000
++++ gcc/include-fixed/limits.h  2023-07-26 13:53:00.912657343 +0000
+@@ -149,4 +149,8 @@
+ # define ULLONG_WIDTH __LONG_LONG_WIDTH__
+ #endif
+
++#ifndef PATH_MAX
++# define PATH_MAX (4096)
++#endif
++
+ #endif /* _LIMITS_H___ */
+EOF
+RUN patch -p0 < /root/cpp.patch
+RUN make
+RUN make install
+WORKDIR /root/gcc-9.2.0/
+RUN cat \
+    gcc/limitx.h \
+    gcc/glimits.h \
+    gcc/limity.h \
+    > /opt/x-tools/aarch64_be_ilp32-linux-gnu/lib/gcc/aarch64_be-linux-gnu/9.2.0/include-fixed/limits.h
+
+################################################################################
+# BUILD                                                                        #
+################################################################################
+FROM ubuntu:24.04 as build
+COPY --from=cpp-ilp32 /opt/x-tools/ /opt/x-tools/
+ENV PATH=/opt/x-tools/aarch64_be_ilp32-linux-gnu/bin:$PATH
+ENV CC=aarch64_be-linux-gnu-gcc
+ENV CXX=aarch64_be-linux-gnu-g++
+ENV STRIP=aarch64_be-linux-gnu-strip
+ENV OBJCOPY=aarch64_be-linux-gnu-objcopy
+ENV NM=aarch64_be-linux-gnu-nm
+ENV CFLAGS=" \
+    -Wno-address-of-packed-member \
+    -march=armv8-a+crc \
+    -mcpu=cortex-a72 \
+    -mbig-endian \
+    -mabi=ilp32"
+ENV LDFLAGS=" \
+    -mbig-endian \
+    -mabi=ilp32"
