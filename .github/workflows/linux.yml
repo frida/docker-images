@@ -32,6 +32,12 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/frida/x-tools-linux-${{ matrix.flavor }}
           tags: type=raw,value=latest,enable={{ is_default_branch }}
+      - name: Pull Docker images
+        if: matrix.flavor == 'be-target'
+        run: |
+          docker pull ${{ env.REGISTRY }}/frida/x-tools-linux-armbe8 \
+          docker pull ${{ env.REGISTRY }}/frida/x-tools-linux-arm64be \
+          docker pull ${{ env.REGISTRY }}/frida/x-tools-linux-arm64beilp32
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
