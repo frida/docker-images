@@ -124,7 +124,7 @@ RUN /root/binutils-2.34/configure \
     --disable-multilib \
     --with-sysroot=/opt/x-tools/aarch64_be-linux-gnu/aarch64_be-linux-gnu/sysroot \
     CFLAGS="-Wno-error"
-RUN make -j
+RUN make
 RUN make install
 
 ################################################################################
@@ -186,7 +186,7 @@ RUN /root/gcc-9.2.0/configure \
     --enable-languages=c,c++ \
     --disable-multilib \
     --with-sysroot=/opt/x-tools/aarch64_be-linux-gnu/aarch64_be-linux-gnu/sysroot
-RUN make -j all-gcc
+RUN make all-gcc
 RUN make install-gcc
 
 ################################################################################
@@ -233,8 +233,8 @@ RUN /root/glibc-2.31/configure \
     --with-sysroot=/opt/x-tools/aarch64_be-linux-gnu/aarch64_be-linux-gnu/sysroot \
     --disable-multilib \
     libc_cv_forced_unwind=yes
-RUN make -j install-bootstrap-headers=yes install-headers
-RUN make -j csu/subdir_lib
+RUN make install-bootstrap-headers=yes install-headers
+RUN make csu/subdir_lib
 RUN mkdir /opt/x-tools/aarch64_be-linux-gnu/aarch64_be-linux-gnu/sysroot/usr/lib/
 RUN install csu/crt1.o csu/crti.o csu/crtn.o /opt/x-tools/aarch64_be-linux-gnu/aarch64_be-linux-gnu/sysroot/usr/lib/
 RUN aarch64_be-linux-gnu-gcc \
@@ -251,7 +251,7 @@ RUN touch /opt/x-tools/aarch64_be-linux-gnu/aarch64_be-linux-gnu/sysroot/usr/inc
 ################################################################################
 FROM glibc-64 AS csl-64
 WORKDIR /root/build-gcc
-RUN make -j all-target-libgcc
+RUN make all-target-libgcc
 RUN make install-target-libgcc
 
 ################################################################################
@@ -259,7 +259,7 @@ RUN make install-target-libgcc
 ################################################################################
 FROM csl-64 AS glibc-64-2
 WORKDIR /root/build-glibc
-RUN make -j
+RUN make
 RUN make install
 
 ################################################################################
@@ -281,7 +281,7 @@ RUN cat <<EOF > /root/cpp.patch
  #endif /* _LIMITS_H___ */
 EOF
 RUN patch -p0 < /root/cpp.patch
-RUN make -j
+RUN make
 RUN make install
 WORKDIR /root/gcc-9.2.0/
 RUN cat \
