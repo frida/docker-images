@@ -1,0 +1,272 @@
+################################################################################
+# BASE                                                                         #
+################################################################################
+FROM ubuntu:24.04 AS base
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+    apt-get install -y \
+    wget \
+    xz-utils \
+    unzip \
+    bzip2
+
+################################################################################
+# PLATFORM                                                                     #
+################################################################################
+FROM base AS platform
+RUN apt-get update && \
+    apt-get install -y \
+    gcc \
+    g++ \
+    make \
+    m4 \
+    patch \
+    gawk \
+    perl \
+    texinfo \
+    git \
+    vim \
+    less
+
+RUN mkdir /opt/x-tools/
+ENV PATH=/opt/x-tools/aarch64_be-linux-gnu/bin:$PATH
+
+################################################################################
+# KERNEL                                                                       #
+################################################################################
+FROM platform AS kernel
+COPY --from=ghcr.io/frida/x-tools-linux-arm64be /opt/x-tools/ /opt/x-tools/
+RUN apt-get update && \
+    apt-get install -y \
+    bc
+WORKDIR /root/
+RUN git clone \
+  --branch ilp32-4.12 \
+  --depth 1 \
+  --single-branch \
+  https://github.com/glevand/ilp32--linux.git \
+  linux-4.12
+WORKDIR /root/linux-4.12
+RUN cat <<EOF > /root/kernel.patch
+diff --git a/scripts/dtc/dtc-lexer.l b/scripts/dtc/dtc-lexer.l
+index fd825ebb..24af5499 100644
+--- a/scripts/dtc/dtc-lexer.l
++++ b/scripts/dtc/dtc-lexer.l
+@@ -38,7 +38,6 @@ LINECOMMENT   "//".*\n
+ #include "srcpos.h"
+ #include "dtc-parser.tab.h"
+
+-YYLTYPE yylloc;
+ extern bool treesource_error;
+
+ /* CAUTION: this will stop working if we ever use yyless() or yyunput() */
+diff --git a/scripts/dtc/dtc-lexer.lex.c_shipped b/scripts/dtc/dtc-lexer.lex.c_shipped
+index 64c24377..9db3a409 100644
+--- a/scripts/dtc/dtc-lexer.lex.c_shipped
++++ b/scripts/dtc/dtc-lexer.lex.c_shipped
+@@ -631,7 +631,6 @@ char *yytext;
+ #include "srcpos.h"
+ #include "dtc-parser.tab.h"
+
+-YYLTYPE yylloc;
+ extern bool treesource_error;
+
+ /* CAUTION: this will stop working if we ever use yyless() or yyunput() */
+EOF
+RUN patch -p1 < /root/kernel.patch
+RUN mkdir build
+RUN ARCH=arm64 make O=/root/linux-4.12/build/ defconfig
+RUN echo "CONFIG_COMPAT=y" >> /root/linux-4.12/build/.config
+RUN sed -i \
+    's@CONFIG_CPU_LITTLE_ENDIAN=y@# CONFIG_CPU_LITTLE_ENDIAN is not set@g' \
+    /root/linux-4.12/build/.config
+RUN sed -i \
+    's@# CONFIG_CPU_BIG_ENDIAN is not set@CONFIG_CPU_BIG_ENDIAN=y@g' \
+    /root/linux-4.12/build/.config
+RUN ARCH=arm64 make O=/root/linux-4.12/build/ olddefconfig
+WORKDIR /root/linux-4.12/build/
+RUN ARCH=arm64 CROSS_COMPILE=aarch64_be-linux-gnu- \
+    CFLAGS="-march=armv8-a -mbig-endian" LDFLAGS="-EB"\
+    make Image.gz
+
+################################################################################
+# BUSYBOX                                                                      #
+################################################################################
+FROM platform AS busybox
+COPY --from=ghcr.io/frida/x-tools-linux-armbe8 /opt/x-tools/ /opt/x-tools/
+ENV PATH=/opt/x-tools/armeb-linux-gnueabi/bin:$PATH
+WORKDIR /root/
+RUN git clone -b 1_35_0 https://github.com/mirror/busybox.git
+WORKDIR /root/busybox
+RUN mkdir build
+RUN make O=/root/busybox/build CROSS_COMPILE=armeb-linux-gnueabi- \
+    CFLAGS="-march=armv8-a" LDFLAGS="-mbe8" defconfig
+RUN echo "CONFIG_STATIC=y" >> /root/busybox/build/.config
+RUN make O=/root/busybox/build CROSS_COMPILE=armeb-linux-gnueabi- \
+    CFLAGS="-march=armv8-a" LDFLAGS="-mbe8" install
+
+################################################################################
+# INITRD                                                                       #
+################################################################################
+FROM platform AS initrd
+COPY --from=ghcr.io/frida/x-tools-linux-armbe8 /opt/x-tools/ /opt/x-tools/
+COPY --from=ghcr.io/frida/x-tools-linux-arm64be /opt/x-tools/ /opt/x-tools/
+COPY --from=ghcr.io/frida/x-tools-linux-arm64beilp32 /opt/x-tools/ /opt/x-tools/
+RUN apt-get update && \
+    apt-get install -y \
+    cpio
+WORKDIR /root/
+COPY --from=busybox /root/busybox/build/_install/ /root/initramfs/
+WORKDIR /root/initramfs/
+RUN mkdir /root/initramfs/devtmpfs/
+RUN mkdir /root/initramfs/etc/
+RUN mkdir -p /root/initramfs/home/share
+RUN mkdir /root/initramfs/proc/
+RUN mkdir /root/initramfs/root/
+RUN mkdir /root/initramfs/sys/
+RUN mkdir /root/initramfs/tmp/
+RUN mkdir /root/initramfs/var/
+RUN mkdir /root/initramfs/var/log/
+RUN touch /root/initramfs/var/log/lastlog
+RUN cat <<EOF > /root/entropy.c
+#include <errno.h>
+#include <fcntl.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <linux/random.h>
+#include <sys/ioctl.h>
+
+#define ENTROPY_SIZE 4096
+#define ENTROPY_COUNT 256
+
+typedef struct
+{
+    struct rand_pool_info pool_info;
+    uint8_t data[ENTROPY_SIZE];
+} entropy_t;
+
+int main(int argc, char **argv)
+{
+    entropy_t entropy = {
+        .pool_info = {
+            .buf_size = ENTROPY_SIZE,
+            .entropy_count = ENTROPY_SIZE * 8,
+        },
+        .data = {0}};
+    int fd = open("/dev/random", O_RDWR);
+    if (fd < 0)
+    {
+        perror("failed to open /dev/random");
+        return EXIT_FAILURE;
+    }
+
+    for (uint32_t i = 0; i < ENTROPY_COUNT; i++)
+    {
+        if (ioctl(fd, RNDADDENTROPY, &entropy) != 0)
+        {
+            perror("failed to write entropy");
+            return EXIT_FAILURE;
+        }
+    }
+
+    close(fd);
+
+    return EXIT_SUCCESS;
+}
+EOF
+RUN /opt/x-tools/armeb-linux-gnueabi/bin/armeb-linux-gnueabi-gcc \
+    -march=armv8-a \
+    -mbe8 \
+    -o /root/initramfs/sbin/entropy \
+    /root/entropy.c
+RUN cat <<EOF > /root/helloworld.c
+#include <stdio.h>
+
+int main(int argc, char **argv)
+{
+    puts("HELLO WORLD");
+}
+EOF
+RUN /opt/x-tools/armeb-linux-gnueabi/bin/armeb-linux-gnueabi-gcc \
+    -mbe8 \
+    /root/helloworld.c \
+    -o /root/initramfs/bin/helloworld-32
+RUN /opt/x-tools/aarch64_be-linux-gnu/bin/aarch64_be-linux-gnu-gcc \
+    -march=armv8-a \
+    -mbig-endian \
+    -Wl,-dynamic-linker,/lib64/ld-linux-aarch64_be.so.1 \
+    /root/helloworld.c \
+    -o /root/initramfs/bin/helloworld-64
+RUN /opt/x-tools/aarch64_be_ilp32-linux-gnu/bin/aarch64_be-linux-gnu-gcc \
+    -march=armv8-a \
+    -mbig-endian \
+    -mabi=ilp32 \
+    -Wl,-EB \
+    -Wl,-dynamic-linker,/libilp32/ld-linux-aarch64_be_ilp32.so.1 \
+    /root/helloworld.c \
+    -o /root/initramfs/bin/helloworld-ilp32
+WORKDIR /root/initramfs/root/
+WORKDIR /root/initramfs/
+COPY --from=ghcr.io/frida/x-tools-linux-armbe8 /opt/x-tools/armeb-linux-gnueabi/armeb-linux-gnueabi/sysroot/usr/lib /root/initramfs/lib/
+COPY --from=ghcr.io/frida/x-tools-linux-arm64be /opt/x-tools/aarch64_be-linux-gnu/aarch64_be-linux-gnu/sysroot/usr/lib /root/initramfs/lib64/
+COPY --from=ghcr.io/frida/x-tools-linux-arm64beilp32 /opt/x-tools/aarch64_be_ilp32-linux-gnu/aarch64_be-linux-gnu/sysroot/usr/lib/ /root/initramfs/libilp32/
+COPY --from=ghcr.io/frida/x-tools-linux-armbe8 /opt/x-tools/armeb-linux-gnueabi/armeb-linux-gnueabi/sysroot/usr/sbin/ldconfig /root/initramfs/sbin
+RUN cat <<EOF > /root/initramfs/etc/group
+root:x:0:
+EOF
+RUN cat <<EOF > /root/initramfs/etc/passwd
+root:7UgX8oG8/gbw2:0:0:Linux User,,,:/root:/bin/sh
+EOF
+RUN cat <<EOF > /root/initramfs/etc/motd
+FRIDA TEST ENVIRONMENT
+
+****************************************
+* To exit the emulator press CTRL-A, X *
+****************************************
+EOF
+RUN cat <<EOF > /root/initramfs/init
+#!/bin/sh
+mount -t proc none /proc
+mount -t sysfs none /sys
+mount -t tmpfs none /tmp
+mount -t devtmpfs none /dev
+mount -t 9p -o rw,sync,dirsync,relatime,trans=virtio,msize=131072,version=9p2000.L host0 /home/share
+ip addr add 192.168.76.20/24 dev eth0
+ip link set eth0 up
+ip route add default via 192.168.76.2 dev eth0
+export LD_LIBRARY_PATH=/lib:/lib64:/libilp32
+/sbin/entropy
+cat /etc/motd
+export PS1='\u@frida:\w\$ '
+exec setsid sh -c 'exec sh </dev/ttyAMA0 >/dev/ttyAMA0 2>&1'
+EOF
+RUN chmod +x /root/initramfs/init
+RUN find . | cpio -o --format=newc -R root:root > /root/initramfs.img
+
+################################################################################
+# GUEST                                                                        #
+################################################################################
+FROM base AS guest
+RUN  apt-get update && \
+    apt-get install -y \
+    qemu-system
+COPY --from=kernel /root/linux-4.12/build/arch/arm64/boot/Image.gz /root/Image.gz
+COPY --from=initrd /root/initramfs.img /root/initramfs.img
+WORKDIR /root/
+ENTRYPOINT [ "qemu-system-aarch64", \
+    "-M", "virt", \
+    "-machine", "virtualization=true", \
+    "-machine", "type=virt", \
+    "-cpu", "cortex-a72", \
+    "-smp", "4", \
+    "-kernel", "/root/Image.gz", \
+    "-initrd", "/root/initramfs.img", \
+    "-append", "'earlyprintk=serial,ttyAMA0 console=ttyAMA0 coredump_filter=0x3f'", \
+    "-m", "4096M", \
+    "-net", "nic,id=eth", \
+    "-net", "user,id=mynet,net=192.168.76.0/24", \
+    "-virtfs", "local,path=/home/share/,mount_tag=host0,security_model=passthrough,id=host0", \
+    "-nographic", \
+    "-no-reboot"]
