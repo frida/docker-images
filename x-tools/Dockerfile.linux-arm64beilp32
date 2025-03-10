@@ -208,7 +208,7 @@ RUN tar xf glibc-2.31.tar.xz
 FROM gcc-ilp32 AS glibc-ilp32
 COPY --from=glibc /root/glibc-2.31 /root/glibc-2.31
 WORKDIR /root/glibc-2.31/
-COPY x-tools/scripts/arm64beilp32-glibc.patch /root/glibc.patch
+COPY scripts/arm64beilp32-glibc.patch /root/glibc.patch
 RUN patch -p1 < /root/glibc.patch
 RUN apt-get update && \
     apt-get install -y \
