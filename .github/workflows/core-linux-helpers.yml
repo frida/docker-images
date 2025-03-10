@@ -5,7 +5,7 @@ on:
     inputs:
       flavors:
         description: "List of flavors to build"
-        default: '["x86", "x86_64", "arm", "arm64", "mips", "mipsel", "mips64", "mips64el"]'
+        default: '["x86", "x86_64", "arm", "armbe8", "arm64", "arm64be", "arm64beilp32", "mips", "mipsel", "mips64", "mips64el"]'
 
 env:
   REGISTRY: ghcr.io
