@@ -138,8 +138,7 @@ RUN tar xf linux-4.4.240.tar.xz
 ################################################################################
 # HEADERS-32                                                                   #
 ################################################################################
-FROM platform AS headers-32
-COPY --from=binutils-32 /opt/x-tools/armeb-linux-gnueabi /opt/x-tools/armeb-linux-gnueabi
+FROM binutils-32 AS headers-32
 COPY --from=linux /root/linux-4.4.240 /root/linux-4.4.240
 WORKDIR /root/linux-4.4.240
 RUN make \
@@ -159,11 +158,7 @@ RUN tar xf gcc-9.2.0.tar.xz
 ################################################################################
 # GCC-32                                                                       #
 ################################################################################
-FROM platform AS gcc-32
-COPY --from=headers-32 /opt/x-tools/armeb-linux-gnueabi /opt/x-tools/armeb-linux-gnueabi
-COPY --from=gmp /root/gmp-6.2.0 /root/gmp-6.2.0
-COPY --from=mpfr /root/mpfr-4.0.2 /root/mpfr-4.0.2
-COPY --from=mpc /root/mpc-1.1.0 /root/mpc-1.1.0
+FROM headers-32 AS gcc-32
 COPY --from=gcc /root/gcc-9.2.0 /root/gcc-9.2.0
 WORKDIR /root/gcc-9.2.0/
 RUN cat <<EOF > /root/gcc.patch
@@ -207,8 +202,7 @@ RUN tar xf glibc-2.31.tar.xz
 ################################################################################
 # GLIBC-32                                                                     #
 ################################################################################
-FROM platform AS glibc-32
-COPY --from=gcc-32 /opt/x-tools/armeb-linux-gnueabi /opt/x-tools/armeb-linux-gnueabi
+FROM gcc-32 AS glibc-32
 COPY --from=glibc /root/glibc-2.31 /root/glibc-2.31
 WORKDIR /root/glibc-2.31/
 RUN cat <<EOF > /root/glibc.patch
@@ -259,13 +253,7 @@ RUN touch /opt/x-tools/armeb-linux-gnueabi/armeb-linux-gnueabi/sysroot/usr/inclu
 ################################################################################
 # CSL-32                                                                       #
 ################################################################################
-FROM platform AS csl-32
-COPY --from=gmp /root/gmp-6.2.0 /root/gmp-6.2.0
-COPY --from=mpfr /root/mpfr-4.0.2 /root/mpfr-4.0.2
-COPY --from=mpc /root/mpc-1.1.0 /root/mpc-1.1.0
-COPY --from=gcc-32 /root/gcc-9.2.0 /root/gcc-9.2.0
-COPY --from=gcc-32 /root/build-gcc /root/build-gcc
-COPY --from=glibc-32 /opt/x-tools/armeb-linux-gnueabi /opt/x-tools/armeb-linux-gnueabi
+FROM glibc-32 AS csl-32
 WORKDIR /root/build-gcc
 RUN make -j all-target-libgcc
 RUN make install-target-libgcc
@@ -273,16 +261,7 @@ RUN make install-target-libgcc
 ################################################################################
 # GLIBC-32-2                                                                   #
 ################################################################################
-FROM platform AS glibc-32-2
-COPY --from=glibc-32 /root/glibc-2.31 /root/glibc-2.31
-COPY --from=glibc-32 /root/build-glibc /root/build-glibc
-COPY --from=csl-32 /opt/x-tools/armeb-linux-gnueabi /opt/x-tools/armeb-linux-gnueabi
-RUN apt-get update && \
-    apt-get install -y \
-    gettext \
-    autoconf \
-    bison \
-    python3
+FROM csl-32 AS glibc-32-2
 WORKDIR /root/build-glibc
 RUN make -j LDFLAGS="-mbe8"
 RUN make install
@@ -290,13 +269,7 @@ RUN make install
 ################################################################################
 # CPP-32                                                                       #
 ################################################################################
-FROM platform AS cpp-32
-COPY --from=csl-32 /root/build-gcc /root/build-gcc
-COPY --from=gmp /root/gmp-6.2.0 /root/gmp-6.2.0
-COPY --from=mpfr /root/mpfr-4.0.2 /root/mpfr-4.0.2
-COPY --from=mpc /root/mpc-1.1.0 /root/mpc-1.1.0
-COPY --from=csl-32 /root/gcc-9.2.0 /root/gcc-9.2.0
-COPY --from=glibc-32-2 /opt/x-tools/armeb-linux-gnueabi /opt/x-tools/armeb-linux-gnueabi
+FROM glibc-32-2 AS cpp-32
 WORKDIR /root/build-gcc
 RUN cat <<EOF > /root/cpp.patch
 --- gcc/include-fixed/limits.h  2023-07-26 13:52:38.544657025 +0000
@@ -322,39 +295,8 @@ RUN cat \
     > /opt/x-tools/armeb-linux-gnueabi/lib/gcc/armeb-linux-gnueabi/9.2.0/include-fixed/limits.h
 
 ################################################################################
-# TEST                                                                         #
-################################################################################
-FROM platform as test
-COPY --from=cpp-32 /opt/x-tools/ /opt/x-tools/
-RUN cat <<EOF > /root/helloworld.c
-#include <stdio.h>
-
-int main(int argc, char **argv)
-{
-    puts("HELLO WORLD");
-}
-EOF
-RUN /opt/x-tools/armeb-linux-gnueabi/bin/armeb-linux-gnueabi-gcc \
-    -mbe8 \
-    /root/helloworld.c \
-    -o /root/helloworld-32
-RUN cat <<EOF > /root/helloworld.cpp
-#include <iostream>
-using namespace std;
-
-int main() {
-    cout << "Hello World";
-    return 0;
-}
-EOF
-RUN /opt/x-tools/armeb-linux-gnueabi/bin/armeb-linux-gnueabi-g++ \
-    -mbe8 \
-    /root/helloworld.cpp \
-    -o /root/helloworld++-32
-
-################################################################################
 # BUILD                                                                        #
 ################################################################################
 FROM ubuntu:24.04 AS build
-COPY --from=test /opt/x-tools/ /opt/x-tools/
+COPY --from=cpp-32 /opt/x-tools/ /opt/x-tools/
 ENV PATH=/opt/x-tools/armeb-linux-gnueabi/bin:$PATH
