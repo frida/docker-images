@@ -124,7 +124,7 @@ RUN /root/binutils-2.34/configure \
     --disable-multilib \
     --with-sysroot=/opt/x-tools/aarch64_be_ilp32-linux-gnu/aarch64_be-linux-gnu/sysroot \
     CFLAGS="-Wno-error"
-RUN make -j
+RUN make
 RUN make install
 
 ################################################################################
@@ -191,7 +191,7 @@ RUN /root/gcc-9.2.0/configure \
     ASFLAGS_FOR_TARGET="-mabi=ilp32" \
     CFLAGS_FOR_TARGET="-mabi=ilp32" \
     CXXFLAGS_FOR_TARGET="-mabi=ilp32"
-RUN make -j all-gcc
+RUN make all-gcc
 RUN make install-gcc
 
 ################################################################################
@@ -233,7 +233,7 @@ RUN /root/glibc-2.31/configure \
     -Os \
     "\
     LDFLAGS="-mabi=ilp32"
-RUN make -j install-bootstrap-headers=yes install-headers
+RUN make install-bootstrap-headers=yes install-headers
 RUN make csu/subdir_lib asm-CPPFLAGS="-mabi=ilp32" LDFLAGS="-mabi=ilp32"
 RUN mkdir /opt/x-tools/aarch64_be_ilp32-linux-gnu/aarch64_be-linux-gnu/sysroot/usr/lib/
 RUN install csu/crt1.o csu/crti.o csu/crtn.o /opt/x-tools/aarch64_be_ilp32-linux-gnu/aarch64_be-linux-gnu/sysroot/usr/lib/
@@ -252,7 +252,7 @@ RUN touch /opt/x-tools/aarch64_be_ilp32-linux-gnu/aarch64_be-linux-gnu/sysroot/u
 ################################################################################
 FROM glibc-ilp32 AS csl-ilp32
 WORKDIR /root/build-gcc
-RUN make -j all-target-libgcc
+RUN make all-target-libgcc
 RUN make install-target-libgcc
 
 ################################################################################
@@ -261,7 +261,7 @@ RUN make install-target-libgcc
 FROM csl-ilp32 AS glibc-ilp32-2
 WORKDIR /root/glibc-2.31/
 WORKDIR /root/build-glibc
-RUN make -j asm-CPPFLAGS=-mabi=ilp32 LDFLAGS=-mabi=ilp32
+RUN make asm-CPPFLAGS=-mabi=ilp32 LDFLAGS=-mabi=ilp32
 RUN make install
 
 ################################################################################
@@ -283,7 +283,7 @@ RUN cat <<EOF > /root/cpp.patch
  #endif /* _LIMITS_H___ */
 EOF
 RUN patch -p0 < /root/cpp.patch
-RUN make -j
+RUN make
 RUN make install
 WORKDIR /root/gcc-9.2.0/
 RUN cat \

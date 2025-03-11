@@ -87,7 +87,7 @@ RUN ARCH=arm64 make O=/root/linux-4.12/build/ olddefconfig
 WORKDIR /root/linux-4.12/build/
 RUN ARCH=arm64 CROSS_COMPILE=aarch64_be-linux-gnu- \
     CFLAGS="-march=armv8-a -mbig-endian" LDFLAGS="-EB"\
-    make -j8 Image.gz
+    make Image.gz
 
 ################################################################################
 # BUSYBOX                                                                      #
@@ -103,7 +103,7 @@ RUN make O=/root/busybox/build CROSS_COMPILE=armeb-linux-gnueabi- \
     CFLAGS="-march=armv8-a" LDFLAGS="-mbe8" defconfig
 RUN echo "CONFIG_STATIC=y" >> /root/busybox/build/.config
 RUN make O=/root/busybox/build CROSS_COMPILE=armeb-linux-gnueabi- \
-    CFLAGS="-march=armv8-a" LDFLAGS="-mbe8" -j8 install
+    CFLAGS="-march=armv8-a" LDFLAGS="-mbe8" install
 
 ################################################################################
 # INITRD                                                                       #
