@@ -45,33 +45,33 @@ git clone https://github.com/frida/crosstool-ng.git /src/crosstool-ng
   ct-ng build
 )
 
-(
-  cd /src
-  curl -sL https://www.python.org/ftp/python/${python_version}/Python-${python_version}.tar.xz | tar -xJf -
-  cd Python-${python_version}
-  base64 -d << EOF | patch -p1
-LS0tIFB5dGhvbi0zLjEwLjcvY29uZmlndXJlLW9yaWcJMjAyMy0wMi0xNSAxMzo1NjowNi41NDY1
-OTEyNTEgKzAwMDAKKysrIFB5dGhvbi0zLjEwLjcvY29uZmlndXJlCTIwMjMtMDItMTUgMTQ6MDU6
-MjQuNjkzMjQ0NDAyICswMDAwCkBAIC01Mzc2LDYgKzUzNzYsOSBAQAogCiBpZiAkQ1BQICRDUFBG
-TEFHUyBjb25mdGVzdC5jID5jb25mdGVzdC5vdXQgMj4vZGV2L251bGw7IHRoZW4KICAgUExBVEZP
-Uk1fVFJJUExFVD1gZ3JlcCAtdiAnXiMnIGNvbmZ0ZXN0Lm91dCB8IGdyZXAgLXYgJ14gKiQnIHwg
-dHIgLWQgJyAJJ2AKKyAgaWYgdGVzdCAiJHtob3N0X29zfSIgPSAibGludXgtbXVzbCI7IHRoZW4K
-KyAgICBQTEFURk9STV9UUklQTEVUPWBlY2hvICRQTEFURk9STV9UUklQTEVUIHwgc2VkICdzLC1n
-bnUkLC1tdXNsLCdgCisgIGZpCiAgIHsgJGFzX2VjaG8gIiRhc19tZToke2FzX2xpbmVuby0kTElO
-RU5PfTogcmVzdWx0OiAkUExBVEZPUk1fVFJJUExFVCIgPiY1CiAkYXNfZWNobyAiJFBMQVRGT1JN
-X1RSSVBMRVQiID4mNjsgfQogZWxzZQo=
-EOF
-  sed -i -e "s,if not find_executable('dpkg-architecture'):,if True:," setup.py
-  export \
-      CFLAGS="$CFLAGS -Os -w" \
-      CPPFLAGS="--sysroot=${xtools_sysroot}"
-  ./configure \
-      --build=x86_64-linux-gnu \
-      --host=${xtools_host} \
-      --prefix=${xtools_prefix} \
-      --disable-ipv6 \
-      cross_compiling=yes \
-      ac_cv_file__dev_ptmx=yes \
-      ac_cv_file__dev_ptc=no
-  make -j`nproc` install
-)
+#(
+#  cd /src
+#  curl -sL https://www.python.org/ftp/python/${python_version}/Python-${python_version}.tar.xz | tar -xJf -
+#  cd Python-${python_version}
+#  base64 -d << EOF | patch -p1
+#LS0tIFB5dGhvbi0zLjEwLjcvY29uZmlndXJlLW9yaWcJMjAyMy0wMi0xNSAxMzo1NjowNi41NDY1
+#OTEyNTEgKzAwMDAKKysrIFB5dGhvbi0zLjEwLjcvY29uZmlndXJlCTIwMjMtMDItMTUgMTQ6MDU6
+#MjQuNjkzMjQ0NDAyICswMDAwCkBAIC01Mzc2LDYgKzUzNzYsOSBAQAogCiBpZiAkQ1BQICRDUFBG
+#TEFHUyBjb25mdGVzdC5jID5jb25mdGVzdC5vdXQgMj4vZGV2L251bGw7IHRoZW4KICAgUExBVEZP
+#Uk1fVFJJUExFVD1gZ3JlcCAtdiAnXiMnIGNvbmZ0ZXN0Lm91dCB8IGdyZXAgLXYgJ14gKiQnIHwg
+#dHIgLWQgJyAJJ2AKKyAgaWYgdGVzdCAiJHtob3N0X29zfSIgPSAibGludXgtbXVzbCI7IHRoZW4K
+#KyAgICBQTEFURk9STV9UUklQTEVUPWBlY2hvICRQTEFURk9STV9UUklQTEVUIHwgc2VkICdzLC1n
+#bnUkLC1tdXNsLCdgCisgIGZpCiAgIHsgJGFzX2VjaG8gIiRhc19tZToke2FzX2xpbmVuby0kTElO
+#RU5PfTogcmVzdWx0OiAkUExBVEZPUk1fVFJJUExFVCIgPiY1CiAkYXNfZWNobyAiJFBMQVRGT1JN
+#X1RSSVBMRVQiID4mNjsgfQogZWxzZQo=
+#EOF
+#  sed -i -e "s,if not find_executable('dpkg-architecture'):,if True:," setup.py
+#  export \
+#      CFLAGS="$CFLAGS -Os -w" \
+#      CPPFLAGS="--sysroot=${xtools_sysroot}"
+#  ./configure \
+#      --build=x86_64-linux-gnu \
+#      --host=${xtools_host} \
+#      --prefix=${xtools_prefix} \
+#      --disable-ipv6 \
+#      cross_compiling=yes \
+#      ac_cv_file__dev_ptmx=yes \
+#      ac_cv_file__dev_ptc=no
+#  make -j`nproc` install
+#)
