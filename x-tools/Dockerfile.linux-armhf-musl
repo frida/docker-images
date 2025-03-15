@@ -1,0 +1,12 @@
+FROM ubuntu:24.04 AS build
+COPY scripts/build-toolchain.sh configs/arm-linux-musleabihf.config /src/
+RUN /src/build-toolchain.sh
+
+FROM ubuntu:24.04
+COPY --from=build /opt /opt
+ENV XTOOLS_HOST="arm-linux-musleabihf"
+ENV \
+	PATH="/opt/x-tools/$XTOOLS_HOST/bin:$PATH" \
+	PKG_CONFIG_PATH="/opt/x-tools/$XTOOLS_HOST/$XTOOLS_HOST/sysroot/usr/lib/pkgconfig"
+COPY scripts/install-packages.sh /tmp
+RUN /tmp/install-packages.sh qemu-user
