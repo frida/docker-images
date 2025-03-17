@@ -8,7 +8,6 @@ export DEBIAN_FRONTEND=noninteractive
 
 apt-get update
 apt-get install -y \
-    awscli \
     bison \
     curl \
     file \
@@ -27,6 +26,7 @@ apt-get install -y \
 curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
 apt-get install -y nodejs
 
+pip install awscli --break-system-packages
 npm install -g cloudflare-cli
 
 rm -rf \

@@ -1,12 +1,12 @@
-FROM ubuntu:22.04 AS build64
+FROM ubuntu:24.04 AS build64
 COPY scripts/build-toolchain.sh configs/x86_64-linux-gnu.config /src/
 RUN /src/build-toolchain.sh
 
-FROM ubuntu:22.04 AS build32
+FROM ubuntu:24.04 AS build32
 COPY scripts/build-toolchain.sh configs/i686-linux-gnu.config /src/
 RUN /src/build-toolchain.sh
 
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 COPY --from=build64 /opt/x-tools/x86_64-linux-gnu /opt/x-tools/x86_64-linux-gnu
 COPY --from=build32 /opt/x-tools/i686-linux-gnu /opt/x-tools/i686-linux-gnu
 ENV XTOOLS_HOST="x86_64-linux-gnu"

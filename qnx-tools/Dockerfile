@@ -1,20 +1,20 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 RUN apt-get update \
 	&& export DEBIAN_FRONTEND=noninteractive \
 	&& apt-get install -y \
-		awscli \
 		build-essential \
 		curl \
 		git \
 		gperf \
 		lib32z1 \
 		libc6-i386 \
+		pip \
 		python-is-python3 \
-		python3-setuptools \
 		qemu-system-arm \
 	&& curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 	&& apt-get install -y nodejs \
+	&& pip install awscli --break-system-packages \
 	&& npm install -g cloudflare-cli \
 	&& rm -rf \
 		~/.npm \
