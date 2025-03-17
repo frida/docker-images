@@ -86,7 +86,6 @@ RUN sed -i \
 RUN ARCH=arm64 make O=/root/linux-4.12/build/ olddefconfig
 WORKDIR /root/linux-4.12/build/
 RUN ARCH=arm64 CROSS_COMPILE=aarch64_be-linux-gnu- \
-    CFLAGS="-march=armv8-a -mbig-endian" LDFLAGS="-EB"\
     make Image.gz
 
 ################################################################################
@@ -94,16 +93,14 @@ RUN ARCH=arm64 CROSS_COMPILE=aarch64_be-linux-gnu- \
 ################################################################################
 FROM platform AS busybox
 COPY --from=ghcr.io/frida/x-tools-linux-armbe8 /opt/x-tools/ /opt/x-tools/
-ENV PATH=/opt/x-tools/armeb-linux-gnueabi/bin:$PATH
+ENV PATH=/opt/x-tools/armeb-linux-gnueabihf/bin:$PATH
 WORKDIR /root/
 RUN git clone -b 1_35_0 https://github.com/mirror/busybox.git
 WORKDIR /root/busybox
 RUN mkdir build
-RUN make O=/root/busybox/build CROSS_COMPILE=armeb-linux-gnueabi- \
-    CFLAGS="-march=armv8-a" LDFLAGS="-mbe8" defconfig
+RUN make O=/root/busybox/build CROSS_COMPILE=armeb-linux-gnueabihf- defconfig
 RUN echo "CONFIG_STATIC=y" >> /root/busybox/build/.config
-RUN make O=/root/busybox/build CROSS_COMPILE=armeb-linux-gnueabi- \
-    CFLAGS="-march=armv8-a" LDFLAGS="-mbe8" install
+RUN make O=/root/busybox/build CROSS_COMPILE=armeb-linux-gnueabihf- install
 
 ################################################################################
 # INITRD                                                                       #
@@ -176,9 +173,7 @@ int main(int argc, char **argv)
     return EXIT_SUCCESS;
 }
 EOF
-RUN /opt/x-tools/armeb-linux-gnueabi/bin/armeb-linux-gnueabi-gcc \
-    -march=armv8-a \
-    -mbe8 \
+RUN /opt/x-tools/armeb-linux-gnueabihf/bin/armeb-linux-gnueabihf-gcc \
     -o /root/initramfs/sbin/entropy \
     /root/entropy.c
 RUN cat <<EOF > /root/helloworld.c
@@ -189,30 +184,21 @@ int main(int argc, char **argv)
     puts("HELLO WORLD");
 }
 EOF
-RUN /opt/x-tools/armeb-linux-gnueabi/bin/armeb-linux-gnueabi-gcc \
-    -mbe8 \
+RUN /opt/x-tools/armeb-linux-gnueabihf/bin/armeb-linux-gnueabihf-gcc \
     /root/helloworld.c \
     -o /root/initramfs/bin/helloworld-32
 RUN /opt/x-tools/aarch64_be-linux-gnu/bin/aarch64_be-linux-gnu-gcc \
-    -march=armv8-a \
-    -mbig-endian \
-    -Wl,-dynamic-linker,/lib64/ld-linux-aarch64_be.so.1 \
     /root/helloworld.c \
     -o /root/initramfs/bin/helloworld-64
-RUN /opt/x-tools/aarch64_be_ilp32-linux-gnu/bin/aarch64_be-linux-gnu-gcc \
-    -march=armv8-a \
-    -mbig-endian \
-    -mabi=ilp32 \
-    -Wl,-EB \
-    -Wl,-dynamic-linker,/libilp32/ld-linux-aarch64_be_ilp32.so.1 \
+RUN /opt/x-tools/aarch64_be-linux-gnu_ilp32/bin/aarch64_be-linux-gnu_ilp32-gcc \
     /root/helloworld.c \
     -o /root/initramfs/bin/helloworld-ilp32
 WORKDIR /root/initramfs/root/
 WORKDIR /root/initramfs/
-COPY --from=ghcr.io/frida/x-tools-linux-armbe8 /opt/x-tools/armeb-linux-gnueabi/armeb-linux-gnueabi/sysroot/usr/lib /root/initramfs/lib/
+COPY --from=ghcr.io/frida/x-tools-linux-armbe8 /opt/x-tools/armeb-linux-gnueabihf/armeb-linux-gnueabihf/sysroot/usr/lib /root/initramfs/lib/
 COPY --from=ghcr.io/frida/x-tools-linux-arm64be /opt/x-tools/aarch64_be-linux-gnu/aarch64_be-linux-gnu/sysroot/usr/lib /root/initramfs/lib64/
-COPY --from=ghcr.io/frida/x-tools-linux-arm64beilp32 /opt/x-tools/aarch64_be_ilp32-linux-gnu/aarch64_be-linux-gnu/sysroot/usr/lib/ /root/initramfs/libilp32/
-COPY --from=ghcr.io/frida/x-tools-linux-armbe8 /opt/x-tools/armeb-linux-gnueabi/armeb-linux-gnueabi/sysroot/usr/sbin/ldconfig /root/initramfs/sbin
+COPY --from=ghcr.io/frida/x-tools-linux-arm64beilp32 /opt/x-tools/aarch64_be-linux-gnu_ilp32/aarch64_be-linux-gnu_ilp32/sysroot/usr/lib/ /root/initramfs/libilp32/
+COPY --from=ghcr.io/frida/x-tools-linux-armbe8 /opt/x-tools/armeb-linux-gnueabihf/armeb-linux-gnueabihf/sysroot/sbin/ldconfig /root/initramfs/sbin
 RUN cat <<EOF > /root/initramfs/etc/group
 root:x:0:
 EOF
