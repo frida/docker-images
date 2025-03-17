@@ -1,0 +1,314 @@
+From 60d3edc4b74b4e1e5ef55e53de394d3b65506c47 Mon Sep 17 00:00:00 2001
+From: Patrice Dumas <pertusus@free.fr>
+Date: Wed, 1 May 2024 15:36:11 +0200
+Subject: Remove parent of @include or @setfilename source mark elements
+
+* tp/Texinfo/ParserNonXS.pm (_end_line_misc_line),
+tp/Texinfo/XS/parsetexi/end_line.c (end_line_misc_line): remove parent
+of @include or @setfilename element removed from the tree and
+registered as source mark element.
+
+* tp/Makefile.am (test_files), tp/Makefile.tres, tp/t/80include.t
+(include_in_removed_before_item): add test of @include in @table
+before_item after a comment that holds the source mark, with
+before_item removed from the tree.
+
+Report from Christoph.
+
+diff --git a/tp/Makefile.am b/tp/Makefile.am
+index ed82f59..617154f 100644
+--- a/tp/Makefile.am
++++ b/tp/Makefile.am
+@@ -173,6 +173,7 @@ test_files = \
+  t/include/inc_file.texi \
+  t/include/incl-incl.txi \
+  t/include/macro_included.texi \
++ t/include/only_comment.texi \
+  t/include/section_file.texi \
+  t/include/section_file_no_node.texi \
+  t/include/section_file_no_node_include.texi \
+diff --git a/tp/Makefile.tres b/tp/Makefile.tres
+index d9669f3..1cbb04a 100644
+--- a/tp/Makefile.tres
++++ b/tp/Makefile.tres
+@@ -793,6 +793,7 @@ test_files_generated_list = $(test_tap_files_generated_list) \
+   t/results/include/double_include.pl \
+   t/results/include/include_at_end_line.pl \
+   t/results/include/include_comment.pl \
++  t/results/include/include_in_removed_before_item.pl \
+   t/results/include/include_setfilename_on_setfilename_line.pl \
+   t/results/include/include_space.pl \
+   t/results/include/include_space_comment.pl \
+diff --git a/tp/Texinfo/ParserNonXS.pm b/tp/Texinfo/ParserNonXS.pm
+index 2694289..1886185 100644
+--- a/tp/Texinfo/ParserNonXS.pm
++++ b/tp/Texinfo/ParserNonXS.pm
+@@ -3851,11 +3851,12 @@ sub _end_line_misc_line($$$)
+       } else {
+         $source_mark = { 'sourcemark_type' => $command };
+       }
+-      # this is in order to keep source marks that are within a
+-      # removed element.  For the XS parser it is also easier to
++      # keep the elements, also keeping source marks that are within
++      # removed elements.  For the XS parser it is also easier to
+       # manage the source mark memory which can stay associated
+       # to the element.
+       my $removed_element = _pop_element_from_contents($self, $current);
++      delete $removed_element->{'parent'};
+       $source_mark->{'element'} = $removed_element;
+       _register_source_mark($self, $current, $source_mark);
+     }
+diff --git a/tp/Texinfo/XS/parsetexi/end_line.c b/tp/Texinfo/XS/parsetexi/end_line.c
+index eb1bb6f..000acbb 100644
+--- a/tp/Texinfo/XS/parsetexi/end_line.c
++++ b/tp/Texinfo/XS/parsetexi/end_line.c
+@@ -1718,6 +1718,11 @@ end_line_misc_line (ELEMENT *current)
+                 manage the source mark memory which can stay associated
+                 to the element. */
+               source_mark->element = pop_element_from_contents (current);
++            /* remove parent information, as the parent could be removed
++               from the tree (case of a before_item, for example), and also
++               because it seems incorrect to consider that there is a specific
++               parent in the tree. */
++              source_mark->element->parent = 0;
+               register_source_mark (current, source_mark);
+             }
+         }
+diff --git a/tp/t/80include.t b/tp/t/80include.t
+index af43b3e..2961e9b 100644
+--- a/tp/t/80include.t
++++ b/tp/t/80include.t
+@@ -141,6 +141,13 @@ macro_included.texi
+ '@include inc_file.texi@
+ 
+ After.'],
++['include_in_removed_before_item',
++'@table @code
++@c source mark holder comment
++@include only_comment.texi
++@item FOO
++@end table
++'],
+ ['include_with_setfilename',
+ # for now the plaintext expansion do not test anything as the setfilename in
+ # included files is removed from the tree.  But this may change in the future.
+diff --git a/tp/t/include/only_comment.texi b/tp/t/include/only_comment.texi
+new file mode 100644
+index 0000000..d3b1781
+--- /dev/null
++++ b/tp/t/include/only_comment.texi
+@@ -0,0 +1 @@
++@c in here
+diff --git a/tp/t/results/include/include_in_removed_before_item.pl b/tp/t/results/include/include_in_removed_before_item.pl
+new file mode 100644
+index 0000000..aee44cb
+--- /dev/null
++++ b/tp/t/results/include/include_in_removed_before_item.pl
+@@ -0,0 +1,204 @@
++use vars qw(%result_texis %result_texts %result_trees %result_errors 
++   %result_indices %result_sectioning %result_nodes %result_menus
++   %result_floats %result_converted %result_converted_errors 
++   %result_elements %result_directions_text %result_indices_sort_strings);
++
++use utf8;
++
++$result_trees{'include_in_removed_before_item'} = {
++  'contents' => [
++    {
++      'contents' => [
++        {
++          'args' => [
++            {
++              'contents' => [
++                {
++                  'cmdname' => 'code',
++                  'source_info' => {
++                    'line_nr' => 1
++                  },
++                  'type' => 'command_as_argument'
++                }
++              ],
++              'info' => {
++                'spaces_after_argument' => {
++                  'text' => '
++'
++                }
++              },
++              'type' => 'block_line_arg'
++            }
++          ],
++          'cmdname' => 'table',
++          'contents' => [
++            {
++              'contents' => [
++                {
++                  'contents' => [
++                    {
++                      'args' => [
++                        {
++                          'text' => ' source mark holder comment
++',
++                          'type' => 'rawline_arg'
++                        }
++                      ],
++                      'cmdname' => 'c',
++                      'source_marks' => [
++                        {
++                          'counter' => 1,
++                          'element' => {
++                            'args' => [
++                              {
++                                'contents' => [
++                                  {
++                                    'text' => 'only_comment.texi'
++                                  }
++                                ],
++                                'info' => {
++                                  'spaces_after_argument' => {
++                                    'text' => '
++'
++                                  }
++                                },
++                                'type' => 'line_arg'
++                              }
++                            ],
++                            'cmdname' => 'include',
++                            'extra' => {
++                              'text_arg' => 'only_comment.texi'
++                            },
++                            'info' => {
++                              'spaces_before_argument' => {
++                                'text' => ' '
++                              }
++                            },
++                            'source_info' => {
++                              'line_nr' => 3
++                            }
++                          },
++                          'sourcemark_type' => 'include',
++                          'status' => 'start'
++                        }
++                      ]
++                    },
++                    {
++                      'args' => [
++                        {
++                          'text' => ' in here
++',
++                          'type' => 'rawline_arg'
++                        }
++                      ],
++                      'cmdname' => 'c',
++                      'source_marks' => [
++                        {
++                          'counter' => 1,
++                          'sourcemark_type' => 'include',
++                          'status' => 'end'
++                        }
++                      ]
++                    },
++                    {
++                      'args' => [
++                        {
++                          'contents' => [
++                            {
++                              'text' => 'FOO'
++                            }
++                          ],
++                          'info' => {
++                            'spaces_after_argument' => {
++                              'text' => '
++'
++                            }
++                          },
++                          'type' => 'line_arg'
++                        }
++                      ],
++                      'cmdname' => 'item',
++                      'info' => {
++                        'spaces_before_argument' => {
++                          'text' => ' '
++                        }
++                      },
++                      'source_info' => {
++                        'line_nr' => 4
++                      }
++                    }
++                  ],
++                  'type' => 'table_term'
++                }
++              ],
++              'type' => 'table_entry'
++            },
++            {
++              'args' => [
++                {
++                  'contents' => [
++                    {
++                      'text' => 'table'
++                    }
++                  ],
++                  'info' => {
++                    'spaces_after_argument' => {
++                      'text' => '
++'
++                    }
++                  },
++                  'type' => 'line_arg'
++                }
++              ],
++              'cmdname' => 'end',
++              'extra' => {
++                'text_arg' => 'table'
++              },
++              'info' => {
++                'spaces_before_argument' => {
++                  'text' => ' '
++                }
++              },
++              'source_info' => {
++                'line_nr' => 5
++              }
++            }
++          ],
++          'extra' => {
++            'command_as_argument' => {}
++          },
++          'info' => {
++            'spaces_before_argument' => {
++              'text' => ' '
++            }
++          },
++          'source_info' => {
++            'line_nr' => 1
++          }
++        }
++      ],
++      'type' => 'before_node_section'
++    }
++  ],
++  'type' => 'document_root'
++};
++$result_trees{'include_in_removed_before_item'}{'contents'}[0]{'contents'}[0]{'extra'}{'command_as_argument'} = $result_trees{'include_in_removed_before_item'}{'contents'}[0]{'contents'}[0]{'args'}[0]{'contents'}[0];
++
++$result_texis{'include_in_removed_before_item'} = '@table @code
++@c source mark holder comment
++@c in here
++@item FOO
++@end table
++';
++
++
++$result_texts{'include_in_removed_before_item'} = 'FOO
++';
++
++$result_errors{'include_in_removed_before_item'} = [];
++
++
++$result_floats{'include_in_removed_before_item'} = {};
++
++
++1;
+-- 
+cgit v1.1
+
