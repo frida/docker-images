@@ -7,17 +7,35 @@ xtools_root=/opt/x-tools/${xtools_host}
 xtools_sysroot=${xtools_root}/${xtools_host}/sysroot
 xtools_prefix=${xtools_sysroot}/usr
 
+texinfo_tag="20250317"
+texinfo_version="7.1-3build2frida1"
+texinfo_packages=( \
+    "texinfo_${texinfo_version}_all.deb" \
+    "texinfo-lib_${texinfo_version}_amd64.deb" \
+    "info_${texinfo_version}_amd64.deb" \
+    "install-info_${texinfo_version}_amd64.deb" \
+)
+
 python_version=3.10.7
 
 export PATH=${xtools_root}/bin:$PATH
 export DEBIAN_FRONTEND=noninteractive
 
 apt-get update
+apt-get install -y curl
+
+cd /tmp
+texinfo_pkg_paths=()
+for pkg in ${texinfo_packages[@]}; do
+  curl -LO https://github.com/frida/docker-images/releases/download/$texinfo_tag/$pkg
+  texinfo_pkg_paths+=("./$pkg")
+done
+apt-get install -y ${texinfo_pkg_paths[@]}
+
 apt-get install -y \
     autoconf \
     bison \
     build-essential \
-    curl \
     file \
     flex \
     gawk \
@@ -26,7 +44,6 @@ apt-get install -y \
     libtool-bin \
     ncurses-dev \
     python-is-python3 \
-    texinfo \
     unifdef \
     unzip
 
