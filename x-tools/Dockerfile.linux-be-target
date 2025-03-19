@@ -195,9 +195,11 @@ RUN /opt/x-tools/aarch64_be-linux-gnu_ilp32/bin/aarch64_be-linux-gnu_ilp32-gcc \
     -o /root/initramfs/bin/helloworld-ilp32
 WORKDIR /root/initramfs/root/
 WORKDIR /root/initramfs/
-COPY --from=ghcr.io/frida/x-tools-linux-armbe8 /opt/x-tools/armeb-linux-gnueabihf/armeb-linux-gnueabihf/sysroot/usr/lib /root/initramfs/lib/
-COPY --from=ghcr.io/frida/x-tools-linux-arm64be /opt/x-tools/aarch64_be-linux-gnu/aarch64_be-linux-gnu/sysroot/usr/lib /root/initramfs/lib64/
-COPY --from=ghcr.io/frida/x-tools-linux-arm64beilp32 /opt/x-tools/aarch64_be-linux-gnu_ilp32/aarch64_be-linux-gnu_ilp32/sysroot/usr/lib/ /root/initramfs/libilp32/
+COPY --from=ghcr.io/frida/x-tools-linux-armbe8 /opt/x-tools/armeb-linux-gnueabihf/armeb-linux-gnueabihf/sysroot/lib /root/initramfs/lib/
+COPY --from=ghcr.io/frida/x-tools-linux-arm64be /opt/x-tools/aarch64_be-linux-gnu/aarch64_be-linux-gnu/sysroot/lib /root/initramfs/lib/
+COPY --from=ghcr.io/frida/x-tools-linux-arm64be /opt/x-tools/aarch64_be-linux-gnu/aarch64_be-linux-gnu/sysroot/lib64 /root/initramfs/lib64/
+COPY --from=ghcr.io/frida/x-tools-linux-arm64beilp32 /opt/x-tools/aarch64_be-linux-gnu_ilp32/aarch64_be-linux-gnu_ilp32/sysroot/lib/ld-linux-aarch64_be_ilp32.so.1 /root/initramfs/lib/
+COPY --from=ghcr.io/frida/x-tools-linux-arm64beilp32 /opt/x-tools/aarch64_be-linux-gnu_ilp32/aarch64_be-linux-gnu_ilp32/sysroot/lib/ /root/initramfs/libilp32/
 COPY --from=ghcr.io/frida/x-tools-linux-armbe8 /opt/x-tools/armeb-linux-gnueabihf/armeb-linux-gnueabihf/sysroot/sbin/ldconfig /root/initramfs/sbin
 RUN cat <<EOF > /root/initramfs/etc/group
 root:x:0:
