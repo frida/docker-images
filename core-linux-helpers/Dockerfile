@@ -38,7 +38,7 @@ COPY scripts/install-shared-packages.sh /tmp
 RUN /tmp/install-shared-packages.sh
 
 FROM ghcr.io/frida/x-tools-linux-arm64beilp32 as arm64beilp32
-ENV XTOOLS_HOST=aarch64_be_ilp32-linux-gnu
+ENV XTOOLS_HOST=aarch64_be-linux-gnu_ilp32
 COPY scripts/install-shared-packages.sh /tmp
 RUN /tmp/install-shared-packages.sh
 
