@@ -216,11 +216,13 @@ FRIDA TEST ENVIRONMENT
 EOF
 RUN cat <<EOF > /root/initramfs/init
 #!/bin/sh
+dmesg -n1
 mount -t proc none /proc
 mount -t sysfs none /sys
 mount -t tmpfs none /tmp
 mount -t devtmpfs none /dev
 mount -t 9p -o rw,sync,dirsync,relatime,trans=virtio,msize=131072,version=9p2000.L host0 /home/share
+ip link set lo up
 ip addr add 192.168.76.20/24 dev eth0
 ip link set eth0 up
 ip route add default via 192.168.76.2 dev eth0
