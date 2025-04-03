@@ -1,10 +1,10 @@
 FROM ubuntu:24.04 AS build
-COPY scripts/build-toolchain.sh configs/armeb-linux-gnueabihf.config /src/
+COPY scripts/build-toolchain.sh configs/armeb-linux-gnueabi.config /src/
 RUN /src/build-toolchain.sh
 
 FROM ubuntu:24.04
 COPY --from=build /opt /opt
-ENV XTOOLS_HOST="armeb-linux-gnueabihf"
+ENV XTOOLS_HOST="armeb-linux-gnueabi"
 ENV \
 	PATH="/opt/x-tools/$XTOOLS_HOST/bin:$PATH" \
 	PKG_CONFIG_PATH="/opt/x-tools/$XTOOLS_HOST/$XTOOLS_HOST/sysroot/usr/lib/pkgconfig"
