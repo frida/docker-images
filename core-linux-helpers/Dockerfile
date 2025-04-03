@@ -24,7 +24,7 @@ ENV XTOOLS_HOST=android-arm
 RUN /tmp/install-platform-packages.sh g++-arm-linux-gnueabi
 
 FROM ghcr.io/frida/x-tools-linux-armbe8 as armbe8
-ENV XTOOLS_HOST=armeb-linux-gnueabihf
+ENV XTOOLS_HOST=armeb-linux-gnueabi
 COPY scripts/install-shared-packages.sh /tmp
 RUN /tmp/install-shared-packages.sh
 
