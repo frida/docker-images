@@ -1,4 +1,69 @@
 FROM ubuntu:24.04 AS build
+RUN mkdir -p /src/patches/glibc/2.31/
+RUN cat <<EOF > /src/patches/glibc/2.31/glibc-ilp32.patch
+From 59b64f9cbbf1e98c6d187873de6c363994aee19d Mon Sep 17 00:00:00 2001
+From: Lexi Shao <shaolexi@huawei.com>
+Date: Fri, 15 May 2020 18:48:59 +0800
+Subject: [PATCH] aarch64: fix strcpy and strnlen for big-endian [BZ #25824]
+
+This patch fixes the optimized implementation of strcpy and strnlen
+on a big-endian arm64 machine.
+
+The optimized method uses neon, which can process 128bit with one
+instruction. On a big-endian machine, the bit order should be reversed
+for the whole 128-bits double word. But with instuction
+	rev64	datav.16b, datav.16b
+it reverses 64bits in the two halves rather than reversing 128bits.
+There is no such instruction as rev128 to reverse the 128bits, but we
+can fix this by loading the data registers accordingly.
+
+Fixes 0237b61526e7("aarch64: Optimized implementation of strcpy") and
+2911cb68ed3d("aarch64: Optimized implementation of strnlen").
+
+Signed-off-by: Lexi Shao <shaolexi@huawei.com>
+Reviewed-by: Szabolcs Nagy  <szabolcs.nagy@arm.com>
+---
+ sysdeps/aarch64/strcpy.S  | 5 +++++
+ sysdeps/aarch64/strnlen.S | 5 +++++
+ 2 files changed, 10 insertions(+)
+
+diff --git a/sysdeps/aarch64/strcpy.S b/sysdeps/aarch64/strcpy.S
+index 548130e4130..a8ff52c072e 100644
+--- a/sysdeps/aarch64/strcpy.S
++++ b/sysdeps/aarch64/strcpy.S
+@@ -234,8 +234,13 @@ L(entry_no_page_cross):
+ #endif
+ 	/* calculate the loc value */
+ 	cmeq	datav.16b, datav.16b, #0
++#ifdef __AARCH64EB__
++	mov	data1, datav.d[1]
++	mov	data2, datav.d[0]
++#else
+ 	mov	data1, datav.d[0]
+ 	mov	data2, datav.d[1]
++#endif
+ 	cmp	data1, 0
+ 	csel	data1, data1, data2, ne
+ 	mov	pos, 8
+diff --git a/sysdeps/aarch64/strnlen.S b/sysdeps/aarch64/strnlen.S
+index 5981247dd96..086a5c7e994 100644
+--- a/sysdeps/aarch64/strnlen.S
++++ b/sysdeps/aarch64/strnlen.S
+@@ -154,8 +154,13 @@ L(loop_end):
+ 	   byte.  */
+
+ 	cmeq	datav.16b, datav.16b, #0
++#ifdef __AARCH64EB__
++	mov	data1, datav.d[1]
++	mov	data2, datav.d[0]
++#else
+ 	mov	data1, datav.d[0]
+ 	mov	data2, datav.d[1]
++#endif
+ 	cmp	data1, 0
+ 	csel	data1, data1, data2, ne
+ 	sub	len, src, srcin
+EOF
 COPY scripts/build-toolchain.sh configs/aarch64_be-linux-gnu_ilp32.config /src/
 RUN /src/build-toolchain.sh
 
