@@ -6,6 +6,7 @@ RUN apt-get update \
 		build-essential \
 		curl \
 		git \
+		golang \
 		gperf \
 		lib32z1 \
 		libc6-i386 \

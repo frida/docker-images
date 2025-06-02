@@ -24,6 +24,7 @@ apt-get install -y \
     file \
     flex \
     git \
+    golang \
     gperf \
     make \
     ninja-build \
