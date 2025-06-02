@@ -1,4 +1,4 @@
-FROM ubuntu:24.04 AS base
+FROM ubuntu:25.04 AS base
 COPY scripts/install-shared-packages.sh /tmp
 COPY scripts/install-platform-packages.sh /tmp
 RUN /tmp/install-shared-packages.sh

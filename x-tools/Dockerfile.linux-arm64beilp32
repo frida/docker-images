@@ -1,4 +1,4 @@
-FROM ubuntu:24.04 AS build
+FROM ubuntu:25.04 AS build
 RUN mkdir -p /src/patches/glibc/2.31/
 RUN cat <<EOF > /src/patches/glibc/2.31/glibc-ilp32.patch
 From 59b64f9cbbf1e98c6d187873de6c363994aee19d Mon Sep 17 00:00:00 2001
@@ -67,7 +67,7 @@ EOF
 COPY scripts/build-toolchain.sh configs/aarch64_be-linux-gnu_ilp32.config /src/
 RUN /src/build-toolchain.sh
 
-FROM ubuntu:24.04
+FROM ubuntu:25.04
 COPY --from=build /opt /opt
 ENV XTOOLS_HOST="aarch64_be-linux-gnu_ilp32"
 ENV \

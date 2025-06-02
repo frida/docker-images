@@ -1,8 +1,8 @@
-FROM ubuntu:24.04 AS build
+FROM ubuntu:25.04 AS build
 COPY scripts/build-toolchain.sh configs/armeb-linux-gnueabi.config /src/
 RUN /src/build-toolchain.sh
 
-FROM ubuntu:24.04
+FROM ubuntu:25.04
 COPY --from=build /opt /opt
 ENV XTOOLS_HOST="armeb-linux-gnueabi"
 ENV \
