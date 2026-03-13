@@ -4,12 +4,10 @@ COPY scripts/install-platform-packages.sh /tmp
 RUN /tmp/install-shared-packages.sh
 
 FROM base AS android
-# Download and install the Android NDK and delete the downloaded archive so
-# it doesn't take up space in the image layer.
-RUN curl -L https://dl.google.com/android/repository/android-ndk-r25c-linux.zip -o android-ndk-r25c-linux.zip \
-    && unzip android-ndk-r25c-linux.zip -d /opt \
-    && rm android-ndk-r25c-linux.zip
-ENV ANDROID_NDK_ROOT=/opt/android-ndk-r25c
+RUN curl -L https://dl.google.com/android/repository/android-ndk-r29-linux.zip -o android-ndk-r29-linux.zip \
+    && unzip android-ndk-r29-linux.zip -d /opt \
+    && rm android-ndk-r29-linux.zip
+ENV ANDROID_NDK_ROOT=/opt/android-ndk-r29
 
 FROM base AS x86
 ENV XTOOLS_HOST=i686-linux-gnu
