@@ -134,7 +134,7 @@ EOF
   mkdir $xtools_host
   cd $xtools_host
   export \
-      CFLAGS="$CFLAGS -Os -w" \
+      CFLAGS="$CFLAGS -Os -w -fPIC" \
       CPPFLAGS="--sysroot=${xtools_sysroot}"
   ../../configure \
       --build=x86_64-linux-gnu \
