@@ -28,16 +28,15 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        if: github.ref == 'refs/heads/main'
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/frida/x-tools-linux-${{ matrix.flavor }}
-          tags: type=raw,value=latest,enable={{ is_default_branch }}
+          tags: type=ref,event=branch
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: x-tools
           file: x-tools/Dockerfile.linux-${{ matrix.flavor }}
-          push: ${{ github.ref == 'refs/heads/main' }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
