@@ -38,7 +38,7 @@ curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
 apt-get install -y nodejs
 
 pip install awscli --break-system-packages
-npm install -g cloudflare-cli
+npm install -g cloudflare-cli@5.0.5
 
 if [ $install_qemu_user -ne 0 ]; then
   cd /tmp
